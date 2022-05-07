@@ -7,7 +7,7 @@ dotenv.config({ path: "./config/config.env" });
 const app = express();
 
 // Get class for a
-app.get("/", (req, res) => {
+app.get("/api/v1/classes/:studentId", (req, res) => {
   res.status(200).json({ success: true, msg: ` This gets all the classes for ${req.params.studentId}` });
 });
 
