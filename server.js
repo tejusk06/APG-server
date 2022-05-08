@@ -12,9 +12,10 @@ app.use(cors());
 
 // Configuring Airtable
 var Airtable = require("airtable");
+
 Airtable.configure({
   endpointUrl: "https://api.airtable.com",
-  apiKey: `${process.env.AIRTABLE_KEY}`,
+  apiKey: `${process.env.AIRTABLE_API_KEY}`,
 });
 var base = Airtable.base("appvnq3LlzxDIHTqI");
 
@@ -27,7 +28,7 @@ app.get("/api/v1/classes/:studentID", (req, res) => {
   base("Classes")
     .select({
       // Selecting the first 3 records in Grid view:
-      maxRecords: 100,
+      maxRecords: 300,
       view: "Grid view",
       // filterByFormula: "AND({Students} = 'SAT English', {Name} != 'SAT English')",
     })
