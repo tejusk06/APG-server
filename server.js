@@ -78,7 +78,7 @@ app.get("/api/v1/classes/student/:studentID", (req, res) => {
               classStatus = "Upcoming";
             }
 
-            const momentdate = moment(singleClass.get("Class Time")).format("Do MMMM, h:mm a");
+            const momentdate = moment(singleClass.get("Class Time")).add(330, "minutes").format("Do MMMM, h:mm a");
 
             const formattedSingleClass = {
               className: singleClass.get("Name"),
