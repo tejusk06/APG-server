@@ -22,7 +22,7 @@ app.use(cors());
 const base = require("airtable").base("appvnq3LlzxDIHTqI");
 
 //? Get all classes for a particular student from classes base
-app.get("/api/v1/classes/:studentID", (req, res) => {
+app.get("/api/v1/classes/student/:studentID", (req, res) => {
   let formattedClasses = [];
   // Getting today's date & time for comparision
   const today = new Date();
