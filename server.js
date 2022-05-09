@@ -11,15 +11,17 @@ const app = express();
 app.use(cors());
 
 // Configuring Airtable
-var Airtable = require("airtable");
+// var Airtable = require("airtable");
 
-Airtable.configure({
-  endpointUrl: "https://api.airtable.com",
-  apiKey: `${process.env.AIRTABLE_API_KEY}`,
-});
-var base = Airtable.base("appvnq3LlzxDIHTqI");
+// Airtable.configure({
+//   endpointUrl: "https://api.airtable.com",
+//   apiKey: `${process.env.AIRTABLE_API_KEY}`,
+// });
+// var base = Airtable.base("appvnq3LlzxDIHTqI");
 
-// Get all classes for a particular student from classes base
+const base = require("airtable").base("appvnq3LlzxDIHTqI");
+
+//? Get all classes for a particular student from classes base
 app.get("/api/v1/classes/:studentID", (req, res) => {
   let formattedClasses = [];
   // Getting today's date & time for comparision
@@ -27,9 +29,10 @@ app.get("/api/v1/classes/:studentID", (req, res) => {
 
   base("Classes")
     .select({
-      // Selecting the first 3 records in Grid view:
+      // Selecting the first 300 records in Grid view:
       maxRecords: 300,
       view: "Grid view",
+      fields: ["Name", "Teacher Name", "Class Time", "Topics", "Students", "Students Attended", "Class Completed"],
       // filterByFormula: "AND({Students} = 'SAT English', {Name} != 'SAT English')",
     })
     .eachPage(
@@ -37,38 +40,51 @@ app.get("/api/v1/classes/:studentID", (req, res) => {
         // This function (`page`) will get called for each page of allClasses.
 
         // Sorting the allClasses in decending order
-        allClasses = _.sortBy(allClasses, function (singleClass) {
-          return new Date(singleClass.fields["Class Time"]);
-        }).reverse();
+        // allClasses = _.sortBy(allClasses, function (singleClass) {
+        //   return new Date(singleClass.fields["Class Time"]);
+        // }).reverse();
 
         allClasses.forEach(function (singleClass) {
-          const momentdate = moment(singleClass.get("Class Time")).format("Do MMMM");
           let students = singleClass.get("Students");
-          let classStatus = undefined;
-
-          if (moment(singleClass.get("Class Time")).isAfter(today)) {
-            classStatus = "Upcoming";
-          } else {
-            classStatus = "Completed";
-            // TODO Add logic for missed and attended classes after attendance logic is done on airtable
-            // Get students from students attended column then check if the student exists there if yes "completed" if not then "missed"
-          }
+          let studentsAttended = singleClass.get("Students Attended");
+          let classStatus = null;
 
           // Checking if the student is included for the class
           if (students.includes(req.params.studentID)) {
-            // console.log(
-            // singleClass.get("Name"),
-            // singleClass.get("Students")
-            // singleClass.get("Class Time"),
-            // singleClass.get("Topics")
-            // momentdate
-            // classStatus
-            // );
+            console
+              .log
+              // singleClass.get("Name"),
+              // singleClass.get("Class Completed")
+              // singleClass.get("Students")
+              // singleClass.get("Class Time"),
+              // singleClass.get("Topics")
+              // momentdate
+              // classStatus
+              // studentsAttended
+              ();
+
+            // Marking class status for the student based on attendance marked
+            if (singleClass.get("Class Completed")) {
+              // Checking if any students attendance has been marked
+              if (studentsAttended) {
+                if (studentsAttended.includes(req.params.studentID)) {
+                  classStatus = "Completed";
+                } else {
+                  classStatus = "Missed";
+                }
+              } else {
+                classStatus = "Unknown";
+              }
+            } else {
+              classStatus = "Upcoming";
+            }
+
+            const momentdate = moment(singleClass.get("Class Time")).format("Do MMMM ");
 
             const formattedSingleClass = {
               className: singleClass.get("Name"),
               teacherName: singleClass.get("Teacher Name"),
-              // classTime: singleClass.get("Class Time"),
+              classTime: singleClass.get("Class Time"),
               formattedTime: momentdate,
               classTopics: singleClass.get("Topics"),
               classStatus,
@@ -87,10 +103,49 @@ app.get("/api/v1/classes/:studentID", (req, res) => {
       },
       function done(err) {
         console.log("Done.");
+
+        // Getting all the upcoming classes
+        const upcomingClasses = formattedClasses.filter((eachClass) => {
+          return eachClass.classStatus == "Upcoming";
+        });
+
+        // Sorting Upcoming classes in ascending order
+        upcomingClasses.sort((d1, d2) => new Date(d1.formattedTime).getTime() - new Date(d2.formattedTime).getTime());
+
+        const completedClasses = formattedClasses.filter((eachClass) => {
+          return eachClass.classStatus == "Completed";
+        });
+
+        // Sorting Completed classes in decending order
+        completedClasses.sort((d1, d2) => new Date(d1.formattedTime).getTime() - new Date(d2.formattedTime).getTime())
+          .reverse;
+
+        // Getting all the missed classes
+        const missedClasses = formattedClasses.filter((eachClass) => {
+          return eachClass.classStatus == "Missed";
+        });
+
+        // Sorting Missed classes in decending order
+        missedClasses.sort((d1, d2) => new Date(d1.formattedTime).getTime() - new Date(d2.formattedTime).getTime())
+          .reverse;
+
+        // Getting all the unknown classes
+        const unknownClasses = formattedClasses.filter((eachClass) => {
+          return eachClass.classStatus == "Unknown";
+        });
+
+        // Sorting Unknown classes in decending order
+        missedClasses.sort((d1, d2) => new Date(d1.formattedTime).getTime() - new Date(d2.formattedTime).getTime())
+          .reverse;
+
         res.status(200).json({
           success: true,
           msg: `This gets all the classes`,
-          classes: formattedClasses,
+          // formattedClasses,
+          upcomingClasses,
+          completedClasses,
+          missedClasses,
+          unknownClasses,
         });
         if (err) {
           console.error(err);
@@ -100,7 +155,8 @@ app.get("/api/v1/classes/:studentID", (req, res) => {
     );
 });
 
-// Get all classes for a student from the students base
+//? Get all classes for a student from the students base
+/*
 app.get("/api/v1/student/classes/:studentID", (req, res) => {
   let formattedClasses = [];
   var classesProcessed = 0;
@@ -215,6 +271,7 @@ app.get("/api/v1/student/classes/:studentID", (req, res) => {
     }
   });
 });
+*/
 
 const PORT = process.env.PORT || 5000;
 
