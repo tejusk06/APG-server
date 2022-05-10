@@ -21,9 +21,6 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
   const studentID = req.params.studentCourse.split("-")[0];
   const courseID = req.params.studentCourse.split("-")[1];
 
-  console.log("studentID", studentID);
-  console.log("courseID", courseID);
-
   base("Classes")
     .select({
       // Selecting the first 300 records in Grid view:
@@ -154,6 +151,102 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
           missedClasses,
           unknownClasses,
         });
+        if (err) {
+          console.error(err);
+          return;
+        }
+      }
+    );
+});
+
+//? Get all topics for a particular student from classes base
+app.get("/api/v1/topics/student/:studentCourse", (req, res) => {
+  let formattedTopics = [];
+  // Getting today's date & time for comparision
+  const today = new Date();
+
+  const studentID = req.params.studentCourse.split("-")[0];
+  const courseID = req.params.studentCourse.split("-")[1];
+
+  // Function to mark topics completed as true or false - this is called after all the topics are retrived
+  const checkCompletedTopics = () => {
+    // Get the student object from the base
+    base("Students").find(`${studentID}`, function (err, record) {
+      if (err) {
+        console.error(err);
+        return;
+      }
+
+      // Check for each topics and mark topic completed as true or false
+      formattedTopics.forEach((eachTopic) => {
+        if (record.get("Topics Completed").includes(eachTopic.topicID)) {
+          eachTopic.topicCompleted = "true";
+        } else {
+          eachTopic.topicCompleted = "false";
+        }
+      });
+
+      // Send all formatted topics as response
+      res.status(200).json({
+        success: true,
+        msg: `This gets all the topics for a student`,
+        // formattedClasses,
+        formattedTopics,
+      });
+    });
+  };
+
+  // Get all the topics from the topics base
+  base("Topics")
+    .select({
+      // Selecting the first 300 records in Grid view:
+      maxRecords: 300,
+      view: "All Topics",
+      fields: ["Topic Name", "TopicID", "CourseID", "Course Section", "Video Link", "Webflow Image URL"],
+      filterByFormula: `({CourseID} = '${courseID}')`,
+    })
+    .eachPage(
+      function page(allTopics, fetchNextPage) {
+        // This function (`page`) will get called for each page of allTopics.
+
+        allTopics.forEach(function (singleTopic) {
+          // Checking if the student is included for the class
+
+          // console.log(
+          // singleTopic.get("Topic Name")
+          // singleTopic.get("Course")[0]
+          // singleTopic.get("Class Completed")
+          // singleTopic.get("Students")
+          // singleTopic.get("Class Time"),
+          // singleTopic.get("Topics")
+          // momentdate
+          // classStatus
+          // studentsAttended
+          // );
+
+          const formattedSingleTopic = {
+            topicName: singleTopic.get("Topic Name"),
+            topicID: singleTopic.get("TopicID"),
+            courseSection: singleTopic.get("Course Section"),
+            videoLink: singleTopic.get("Video Link"),
+            imgURL: singleTopic.get("Webflow Image URL"),
+            topicCompleted: null,
+          };
+
+          formattedTopics.push(formattedSingleTopic);
+        });
+        /*
+         To fetch the next page of classes, call `fetchNextPage`.
+         If there are more classes, `page` will get called again.
+         If there are no more classes, `done` will get called.
+  */
+
+        fetchNextPage();
+      },
+      function done(err) {
+        console.log("Done getting topics for student");
+
+        checkCompletedTopics();
         if (err) {
           console.error(err);
           return;
