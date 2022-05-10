@@ -148,3 +148,5 @@ app.get("/api/v1/classes/student/:studentID", (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`));
+
+// testing heroku setup
