@@ -63,7 +63,8 @@ app.get("/api/v1/classes/student/:studentID", (req, res) => {
                   classStatus = "Missed";
                 }
               } else {
-                classStatus = "Unknown";
+                // Setting status as missed if no students attended
+                classStatus = "Missed";
               }
             } else {
               classStatus = "Upcoming";
