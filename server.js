@@ -13,18 +13,33 @@ app.use(cors());
 const base = require("airtable").base("appvnq3LlzxDIHTqI");
 
 //? Get all classes for a particular student from classes base
-app.get("/api/v1/classes/student/:studentID", (req, res) => {
+app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
   let formattedClasses = [];
   // Getting today's date & time for comparision
   const today = new Date();
+
+  const studentID = req.params.studentCourse.split("-")[0];
+  const courseID = req.params.studentCourse.split("-")[1];
+
+  console.log("studentID", studentID);
+  console.log("courseID", courseID);
 
   base("Classes")
     .select({
       // Selecting the first 300 records in Grid view:
       maxRecords: 300,
       view: "Grid view",
-      fields: ["Name", "Teacher Name", "Class Time", "Topics", "Students", "Students Attended", "Class Completed"],
-      // filterByFormula: "AND({Students} = 'SAT English', {Name} != 'SAT English')",
+      fields: [
+        "Name",
+        "CourseID",
+        "Teacher Name",
+        "Class Time",
+        "Topics",
+        "Students",
+        "Students Attended",
+        "Class Completed",
+      ],
+      filterByFormula: `({CourseID} = '${courseID}')`,
     })
     .eachPage(
       function page(allClasses, fetchNextPage) {
@@ -41,23 +56,24 @@ app.get("/api/v1/classes/student/:studentID", (req, res) => {
           let classStatus = null;
 
           // Checking if the student is included for the class
-          if (students.includes(req.params.studentID)) {
-            // console.log(
-            // singleClass.get("Name"),
-            // singleClass.get("Class Completed")
-            // singleClass.get("Students")
-            // singleClass.get("Class Time"),
-            // singleClass.get("Topics")
-            // momentdate
-            // classStatus
-            // studentsAttended
-            // );
+          if (students.includes(studentID)) {
+            console.log(
+              singleClass.get("Name")
+              // singleClass.get("Course")[0]
+              // singleClass.get("Class Completed")
+              // singleClass.get("Students")
+              // singleClass.get("Class Time"),
+              // singleClass.get("Topics")
+              // momentdate
+              // classStatus
+              // studentsAttended
+            );
 
             // Marking class status for the student based on attendance marked
             if (singleClass.get("Class Completed")) {
               // Checking if any students attendance has been marked
               if (studentsAttended) {
-                if (studentsAttended.includes(req.params.studentID)) {
+                if (studentsAttended.includes(studentID)) {
                   classStatus = "Completed";
                 } else {
                   classStatus = "Missed";
