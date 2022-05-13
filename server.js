@@ -225,6 +225,7 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
             date: record.get("Due Date"),
             completed: homeworkCompleted,
             attachment: attachment,
+            momentDate: moment(record.get("Due Date")).format("Do MMM"),
           };
           homeworkArray.push(homeworkItem);
         });
