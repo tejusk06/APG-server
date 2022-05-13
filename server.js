@@ -190,7 +190,7 @@ app.get("/api/v1/topics/student/:studentCourse", (req, res) => {
 //? Get all Homework for a particular student from Homework 2 base
 app.get("/api/v1/homework/student/:studentID", (req, res) => {
   // Getting today's date & time for comparision
-  let homeworkNames = [];
+  let homeworkArray = [];
   const today = new Date();
 
   const studentID = req.params.studentID;
@@ -201,7 +201,7 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
       // Selecting the first 3000 records in Grid view:
       maxRecords: 6000,
       view: "Grid view",
-      fields: ["Topic Name", "Due Date", "Completed"],
+      fields: ["Topic Name", "Due Date", "Completed", "Attachment"],
       filterByFormula: `({StudentID} = '${studentID}')`,
     })
     .eachPage(
@@ -209,8 +209,24 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
         // This function (`page`) will get called for each page of records.
 
         records.forEach(function (record) {
-          console.log("Retrieved", record.get("Topic Name")[0]);
-          homeworkNames.push(record.get("Topic Name")[0]);
+          var attachment = record.get(["Attachment"]);
+          if (!attachment) {
+            attachment = null;
+          }
+          console.log("url", attachment);
+          // console.log("Attachment", record.get("Attachment"));
+          let homeworkCompleted = false;
+          if (record.get("Completed")) {
+            homeworkCompleted = true;
+          }
+
+          let homeworkItem = {
+            name: record.get("Topic Name")[0],
+            date: record.get("Due Date"),
+            completed: homeworkCompleted,
+            attachment: attachment,
+          };
+          homeworkArray.push(homeworkItem);
         });
 
         // To fetch the next page of records, call `fetchNextPage`.
@@ -222,7 +238,7 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
         res.status(200).json({
           success: true,
           msg: `This gets all the homework for a student`,
-          homeworkNames,
+          homeworkArray,
         });
 
         if (err) {
