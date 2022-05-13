@@ -187,6 +187,54 @@ app.get("/api/v1/topics/student/:studentCourse", (req, res) => {
   });
 });
 
+//? Get all Homework for a particular student from Homework 2 base
+app.get("/api/v1/homework/student/:studentID", (req, res) => {
+  // Getting today's date & time for comparision
+  let homeworkNames = [];
+  const today = new Date();
+
+  const studentID = req.params.studentID;
+
+  // Function to mark topics completed as true or false - this is called after all the topics are retrived
+  base("Homework 2")
+    .select({
+      // Selecting the first 3000 records in Grid view:
+      maxRecords: 6000,
+      view: "Grid view",
+      fields: ["Topic Name", "Due Date", "Completed"],
+      filterByFormula: `({StudentID} = '${studentID}')`,
+    })
+    .eachPage(
+      function page(records, fetchNextPage) {
+        // This function (`page`) will get called for each page of records.
+
+        records.forEach(function (record) {
+          console.log("Retrieved", record.get("Topic Name")[0]);
+          homeworkNames.push(record.get("Topic Name")[0]);
+        });
+
+        // To fetch the next page of records, call `fetchNextPage`.
+        // If there are more records, `page` will get called again.
+        // If there are no more records, `done` will get called.
+        fetchNextPage();
+      },
+      function done(err) {
+        res.status(200).json({
+          success: true,
+          msg: `This gets all the homework for a student`,
+          homeworkNames,
+        });
+
+        if (err) {
+          console.error(err);
+          return;
+        }
+      }
+    );
+
+  // Send all formatted topics as response
+});
+
 //? Get all classes for a particular teacher from classes base
 app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
   let formattedClasses = [];
