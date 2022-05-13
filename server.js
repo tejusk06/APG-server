@@ -177,6 +177,10 @@ app.get("/api/v1/topics/student/:studentCourse", (req, res) => {
         return;
       }
 
+      const completedTopics = record.get("Completed Topic Names");
+
+      console.log("Topics are", completedTopics);
+
       // Check for each topics and mark topic completed as true or false
       formattedTopics.forEach((eachTopic) => {
         if (record.get("Topics Completed").includes(eachTopic.topicID)) {
@@ -192,6 +196,7 @@ app.get("/api/v1/topics/student/:studentCourse", (req, res) => {
         msg: `This gets all the topics for a student`,
         // formattedClasses,
         formattedTopics,
+        completedTopics,
       });
     });
   };
