@@ -174,7 +174,7 @@ app.get("/api/v1/topics/student/:studentCourse", (req, res) => {
       return;
     }
 
-    const completedTopics = record.get("Completed Topic Names");
+    const completedTopics = record.get("Completed Topic IDs");
 
     console.log("Topics are", completedTopics);
 
