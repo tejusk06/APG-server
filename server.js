@@ -196,7 +196,7 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
   const studentID = req.params.studentID;
 
   // Function to mark topics completed as true or false - this is called after all the topics are retrived
-  base("Homework 2")
+  base("Homework")
     .select({
       // Selecting the first 3000 records in Grid view:
       maxRecords: 6000,
@@ -213,8 +213,8 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
           if (!attachment) {
             attachment = null;
           }
-          console.log("url", attachment);
-          // console.log("Attachment", record.get("Attachment"));
+          // console.log("url", attachment);
+          // console.log("Attachment", record.get("url"));
           let homeworkCompleted = false;
           if (record.get("Completed")) {
             homeworkCompleted = true;
