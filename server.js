@@ -291,6 +291,11 @@ app.get("/api/v1/tests/student/:studentID", (req, res) => {
         fetchNextPage();
       },
       function done(err) {
+        // Sorting the allClasses in decending order
+        testsArray = _.sortBy(testsArray, function (singleTest) {
+          return new Date(singleTest.fields["name"]);
+        });
+
         res.status(200).json({
           success: true,
           msg: `This gets all the tests for a student`,
