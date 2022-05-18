@@ -293,7 +293,7 @@ app.get("/api/v1/tests/student/:studentID", (req, res) => {
       function done(err) {
         // Sorting the allClasses in decending order
         testsArray = _.sortBy(testsArray, function (singleTest) {
-          return new Date(singleTest.fields["name"]);
+          return singleTest.name;
         });
 
         res.status(200).json({
