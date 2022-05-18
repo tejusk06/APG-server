@@ -266,27 +266,20 @@ app.get("/api/v1/tests/student/:studentID", (req, res) => {
       // Selecting the first 6000 records in Grid view:
       maxRecords: 10000,
       view: "Grid view",
-      fields: ["Test Name", "Test Due Date", "Test Report", "Status"],
+      fields: ["Test Name", "Test Due Date", "Test Report", "Status", "Question Paper"],
       filterByFormula: `({StudentID} = '${studentID}')`,
     })
     .eachPage(
       function page(records, fetchNextPage) {
         // This function (`page`) will get called for each page of records.
-        // console.log(records);
+
         records.forEach(function (record) {
-          // var attachment = record.get(["Attachment"]);
-          // if (!attachment) {
-          //   attachment = null;
-          // }
-          // let homeworkCompleted = false;
-          // if (record.get("Completed")) {
-          //   homeworkCompleted = true;
-          // }
           let testItem = {
             name: record.get("Test Name")[0],
             dueDate: record.get("Test Due Date"),
             report: record.get("Test Report") ? record.get("Test Report")[0].url : null,
             status: "Status",
+            questionPaper: record.get("Question Paper")[0].url,
           };
           testsArray.push(testItem);
         });
