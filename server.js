@@ -278,7 +278,7 @@ app.get("/api/v1/tests/student/:studentID", (req, res) => {
             name: record.get("Test Name")[0],
             dueDate: record.get("Test Due Date"),
             report: record.get("Test Report") ? record.get("Test Report")[0].url : null,
-            status: "Status",
+            status: record.get("Status") ? record.get("Status") : false,
             questionPaper: record.get("Question Paper")[0].url,
           };
           testsArray.push(testItem);
