@@ -187,7 +187,7 @@ app.get("/api/v1/topics/student/:studentCourse", (req, res) => {
   });
 });
 
-//? Get all Homework for a particular student from Homework 2 base
+//? Get all Homework for a particular student from Homework base
 app.get("/api/v1/homework/student/:studentID", (req, res) => {
   // Getting today's date & time for comparision
   let homeworkArray = [];
@@ -225,7 +225,7 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
             topicId: record.get("TopicID")[0],
             date: record.get("Due Date"),
             completed: homeworkCompleted,
-            attachment: attachment,
+            attachment: attachment ? attachment[0].url : attachment,
             momentDate: moment(record.get("Due Date")).format("Do MMM"),
           };
           homeworkArray.push(homeworkItem);
@@ -241,6 +241,66 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
           success: true,
           msg: `This gets all the homework for a student`,
           homeworkArray,
+        });
+
+        if (err) {
+          console.error(err);
+          return;
+        }
+      }
+    );
+
+  // Send all formatted topics as response
+});
+
+//? Get all Tests for a particular student from Student Tests base
+app.get("/api/v1/tests/student/:studentID", (req, res) => {
+  // Getting today's date & time for comparision
+  let testsArray = [];
+  const today = new Date();
+
+  const studentID = req.params.studentID;
+
+  base("Student Tests")
+    .select({
+      // Selecting the first 6000 records in Grid view:
+      maxRecords: 10000,
+      view: "Grid view",
+      fields: ["Test Name", "Test Due Date", "Test Report", "Status"],
+      filterByFormula: `({StudentID} = '${studentID}')`,
+    })
+    .eachPage(
+      function page(records, fetchNextPage) {
+        // This function (`page`) will get called for each page of records.
+        // console.log(records);
+        records.forEach(function (record) {
+          // var attachment = record.get(["Attachment"]);
+          // if (!attachment) {
+          //   attachment = null;
+          // }
+          // let homeworkCompleted = false;
+          // if (record.get("Completed")) {
+          //   homeworkCompleted = true;
+          // }
+          let testItem = {
+            name: record.get("Test Name")[0],
+            dueDate: record.get("Test Due Date"),
+            report: record.get("Test Report") ? record.get("Test Report")[0].url : null,
+            status: "Status",
+          };
+          testsArray.push(testItem);
+        });
+
+        // To fetch the next page of records, call `fetchNextPage`.
+        // If there are more records, `page` will get called again.
+        // If there are no more records, `done` will get called.
+        fetchNextPage();
+      },
+      function done(err) {
+        res.status(200).json({
+          success: true,
+          msg: `This gets all the tests for a student`,
+          testsArray,
         });
 
         if (err) {
