@@ -159,6 +159,119 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
     );
 });
 
+//? Get all classes from classes base for admin
+app.get("/api/v1/classes/admin", (req, res) => {
+  let formattedClasses = [];
+  // Getting today's date & time for comparision
+  const today = new Date();
+
+  base("Classes")
+    .select({
+      // Selecting the first 300 records in Grid view:
+      maxRecords: 500,
+      view: "Grid view",
+      fields: [
+        "Name",
+        "CourseID",
+        "Teacher Name",
+        "Class Time",
+        "Topics",
+        "Students",
+        "Students Attended",
+        "Class Completed",
+        "Course Section",
+      ],
+    })
+    .eachPage(
+      function page(allClasses, fetchNextPage) {
+        // This function (`page`) will get called for each page of allClasses.
+
+        allClasses.forEach(function (singleClass) {
+          let classStatus = null;
+
+          // Checking if the student is included for the class
+
+          console.log(
+            singleClass.get("Name")
+            // singleClass.get("Course")[0]
+            // singleClass.get("Class Completed")
+            // singleClass.get("Students")
+            // singleClass.get("Class Time"),
+            // singleClass.get("Topics")
+            // momentdate
+            // classStatus
+            // studentsAttended
+          );
+
+          // Marking class status for the student based on attendance marked
+          if (singleClass.get("Class Completed")) {
+            // Checking if any students attendance has been marked
+            classStatus = "Completed";
+          } else {
+            classStatus = "Upcoming";
+          }
+
+          const momentdate = moment(singleClass.get("Class Time")).add(330, "minutes").format("Do MMMM YY, h:mm a");
+
+          const formattedSingleClass = {
+            className: singleClass.get("Name"),
+            teacherName: singleClass.get("Teacher Name"),
+            classTime: singleClass.get("Class Time"),
+            formattedTime: momentdate,
+            classTopics: singleClass.get("Topics"),
+            courseSection: singleClass.get("Course Section")[0],
+            classStatus,
+          };
+
+          formattedClasses.push(formattedSingleClass);
+        });
+        /*
+         To fetch the next page of classes, call `fetchNextPage`.
+         If there are more classes, `page` will get called again.
+         If there are no more classes, `done` will get called.
+  */
+
+        fetchNextPage();
+      },
+      function done(err) {
+        console.log("Done.");
+
+        // Getting all the upcoming classes
+        const upcomingClasses = formattedClasses.filter((eachClass) => {
+          return eachClass.classStatus == "Upcoming";
+        });
+
+        const upcomingSorted = upcomingClasses.sort(function compare(a, b) {
+          var dateA = new Date(a.classTime);
+          var dateB = new Date(b.classTime);
+          return dateA - dateB;
+        });
+
+        const completedClasses = formattedClasses.filter((eachClass) => {
+          return eachClass.classStatus == "Completed";
+        });
+
+        const completedSorted = completedClasses.sort(function compare(a, b) {
+          var dateA = new Date(a.classTime);
+          var dateB = new Date(b.classTime);
+          return dateB - dateA;
+        });
+
+        res.status(200).json({
+          success: true,
+          msg: `This gets all the classes for the admin`,
+          // formattedClasses,
+          upcomingClasses: upcomingSorted,
+          completedClasses: completedSorted,
+        });
+        if (err) {
+          console.error(err);
+          return;
+        }
+      }
+    );
+});
+
 //? Get all topics for a particular student from classes base
 app.get("/api/v1/topics/student/:studentCourse", (req, res) => {
   // Getting today's date & time for comparision
@@ -333,11 +446,6 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
     .eachPage(
       function page(allClasses, fetchNextPage) {
         // This function (`page`) will get called for each page of allClasses.
-
-        // Sorting the allClasses in decending order
-        // allClasses = _.sortBy(allClasses, function (singleClass) {
-        //   return new Date(singleClass.fields["Class Time"]);
-        // }).reverse();
 
         allClasses.forEach(function (singleClass) {
           let classStatus = null;
