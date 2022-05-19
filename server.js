@@ -452,6 +452,7 @@ app.get("/api/v1/class/:classID", (req, res) => {
       teacherName: record.fields["Teacher Name"],
       topicsCompleted: record.fields["Topic Completed"],
       topicsForm: record.fields["Topics Form"],
+      momentDate: moment(record.fields["Class Time"]).add(330, "minutes").format("Do MMMM, h:mm a"),
     });
 
     console.log("Retrieved", record);
