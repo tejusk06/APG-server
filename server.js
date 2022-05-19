@@ -180,6 +180,7 @@ app.get("/api/v1/classes/admin", (req, res) => {
         "Students Attended",
         "Class Completed",
         "Course Section",
+        "ClassID",
       ],
     })
     .eachPage(
@@ -220,6 +221,7 @@ app.get("/api/v1/classes/admin", (req, res) => {
             formattedTime: momentdate,
             classTopics: singleClass.get("Topics"),
             courseSection: singleClass.get("Course Section")[0],
+            classID: singleClass.get("ClassID"),
             classStatus,
           };
 
