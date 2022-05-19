@@ -391,16 +391,21 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
           return eachClass.classStatus == "Upcoming";
         });
 
-        // Sorting Upcoming classes in ascending order
-        upcomingClasses.sort((d1, d2) => new Date(d1.formattedTime).getTime() - new Date(d2.formattedTime).getTime());
+        const upcomingSorted = upcomingClasses.sort(function compare(a, b) {
+          var dateA = new Date(a.classTime);
+          var dateB = new Date(b.classTime);
+          return dateA - dateB;
+        });
 
         const completedClasses = formattedClasses.filter((eachClass) => {
           return eachClass.classStatus == "Completed";
         });
 
-        // Sorting Completed classes in decending order
-        completedClasses.sort((d1, d2) => new Date(d1.formattedTime).getTime() - new Date(d2.formattedTime).getTime())
-          .reverse;
+        const completedSorted = completedClasses.sort(function compare(a, b) {
+          var dateA = new Date(a.classTime);
+          var dateB = new Date(b.classTime);
+          return dateB - dateA;
+        });
 
         // Getting all the unknown classes
         const unknownClasses = formattedClasses.filter((eachClass) => {
@@ -415,8 +420,8 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
           success: true,
           msg: `This gets all the classes`,
           // formattedClasses,
-          upcomingClasses,
-          completedClasses,
+          upcomingClasses: upcomingSorted,
+          completedClasses: completedSorted,
           // missedClasses,
           unknownClasses,
         });
