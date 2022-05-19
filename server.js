@@ -208,6 +208,8 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
       function page(records, fetchNextPage) {
         // This function (`page`) will get called for each page of records.
 
+        console.log(records);
+
         records.forEach(function (record) {
           var attachment = record.get(["Attachment"]);
           if (!attachment) {
@@ -359,7 +361,7 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
             classStatus = "Upcoming";
           }
 
-          const momentdate = moment(singleClass.get("Class Time")).add(330, "minutes").format("Do MMMM, h:mm a");
+          const momentdate = moment(singleClass.get("Class Time")).add(330, "minutes").format("Do MMMM YY, h:mm a");
 
           const formattedSingleClass = {
             className: singleClass.get("Name"),
@@ -400,15 +402,6 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
         completedClasses.sort((d1, d2) => new Date(d1.formattedTime).getTime() - new Date(d2.formattedTime).getTime())
           .reverse;
 
-        // Getting all the missed classes
-        // const missedClasses = formattedClasses.filter((eachClass) => {
-        //   return eachClass.classStatus == "Missed";
-        // });
-
-        // Sorting Missed classes in decending order
-        // missedClasses.sort((d1, d2) => new Date(d1.formattedTime).getTime() - new Date(d2.formattedTime).getTime())
-        //   .reverse;
-
         // Getting all the unknown classes
         const unknownClasses = formattedClasses.filter((eachClass) => {
           return eachClass.classStatus == "Unknown";
@@ -434,6 +427,33 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
       }
     );
 });
+
+//? Get individual class for a particular from classes base
+app.get("/api/v1/class/:classID", (req, res) => {
+  const classID = req.params.classID;
+  // Getting today's date & time for comparision
+
+  base("Classes").find(`${classID}`, function (err, record) {
+    if (err) {
+      console.error(err);
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      msg: `This gets the individual class`,
+      // classData: record,
+      className: record.fields.Name,
+      teacherName: record.fields["Teacher Name"],
+      topicsCompleted: record.fields["Topic Completed"],
+      classForm: record.fields["Class Form"],
+    });
+
+    console.log("Retrieved", record);
+  });
+});
+
+//? Get individual class for a teacher from classes base
 
 const PORT = process.env.PORT || 5000;
 
