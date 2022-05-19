@@ -23,8 +23,8 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
 
   base("Classes")
     .select({
-      // Selecting the first 300 records in Grid view:
-      maxRecords: 300,
+      // Selecting the first 500 records in Grid view:
+      maxRecords: 500,
       view: "Grid view",
       fields: [
         "Name",
@@ -35,17 +35,13 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
         "Students",
         "Students Attended",
         "Class Completed",
+        "ClassID",
       ],
       filterByFormula: `({CourseID} = '${courseID}')`,
     })
     .eachPage(
       function page(allClasses, fetchNextPage) {
         // This function (`page`) will get called for each page of allClasses.
-
-        // Sorting the allClasses in decending order
-        // allClasses = _.sortBy(allClasses, function (singleClass) {
-        //   return new Date(singleClass.fields["Class Time"]);
-        // }).reverse();
 
         allClasses.forEach(function (singleClass) {
           let students = singleClass.get("Students");
@@ -578,6 +574,17 @@ app.get("/api/v1/admin/students", (req, res) => {
       // Selecting the first 3 records in Grid view:
       maxRecords: 400,
       view: "Grid view",
+      fields: [
+        "Name",
+        "Location",
+        "Student Image",
+        "Total Classes",
+        "Total Tests",
+        "Total Homework",
+        "Total Topics Completed",
+        "StudentID",
+        "CourseID",
+      ],
     })
     .eachPage(
       function page(records, fetchNextPage) {
@@ -592,6 +599,8 @@ app.get("/api/v1/admin/students", (req, res) => {
             tests: record.get("Total Tests"),
             homework: record.get("Total Homework"),
             topics: record.get("Total Topics Completed"),
+            studentID: record.get("StudentID"),
+            courseID: record.get("CourseID")[0],
           };
           console.log("Retrieved", record.get("Name"));
 
@@ -616,6 +625,29 @@ app.get("/api/v1/admin/students", (req, res) => {
         });
       }
     );
+});
+
+//? Get individual student from the students database for admin
+app.get("/api/v1/admin/student/:studentID", (req, res) => {
+  const studentID = req.params.studentID;
+
+  base("Students").find(`${studentID}`, function (err, record) {
+    if (err) {
+      console.error(err);
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      msg: `This gets all the students`,
+      student: {
+        name: record.get("Name"),
+        email: record.get("Email Id"),
+        image: record.get("Student Image") ? record.get("Student Image")[0].url : null,
+        id: record.get("StudentID"),
+      },
+    });
+  });
 });
 
 const PORT = process.env.PORT || 5000;
