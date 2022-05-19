@@ -646,6 +646,7 @@ app.get("/api/v1/admin/student/:studentID", (req, res) => {
         email: record.get("Email Id"),
         image: record.get("Student Image") ? record.get("Student Image")[0].url : null,
         id: record.get("StudentID"),
+        courseID: record.get("CourseID")[0],
       },
     });
   });
