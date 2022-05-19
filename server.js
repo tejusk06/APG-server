@@ -433,7 +433,7 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
     );
 });
 
-//? Get individual class for a particular from classes base
+//? Get individual class from classes base
 app.get("/api/v1/class/:classID", (req, res) => {
   const classID = req.params.classID;
   // Getting today's date & time for comparision
@@ -451,7 +451,7 @@ app.get("/api/v1/class/:classID", (req, res) => {
       className: record.fields.Name,
       teacherName: record.fields["Teacher Name"],
       topicsCompleted: record.fields["Topic Completed"],
-      classForm: record.fields["Class Form"],
+      topicsForm: record.fields["Topics Form"],
     });
 
     console.log("Retrieved", record);
