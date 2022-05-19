@@ -87,6 +87,7 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
               classTime: singleClass.get("Class Time"),
               formattedTime: momentdate,
               classTopics: singleClass.get("Topics"),
+              classID: singleClass.get("ClassID"),
               classStatus,
             };
 
