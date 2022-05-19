@@ -543,7 +543,7 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
     );
 });
 
-//? Get individual class from classes base
+//? Get individual class from classes base for both teacher and admin
 app.get("/api/v1/class/:classID", (req, res) => {
   const classID = req.params.classID;
   // Getting today's date & time for comparision
@@ -569,7 +569,54 @@ app.get("/api/v1/class/:classID", (req, res) => {
   });
 });
 
-//? Get individual class for a teacher from classes base
+//? Get all students from the students database for admin
+app.get("/api/v1/admin/students", (req, res) => {
+  let allStudents = [];
+
+  base("Students")
+    .select({
+      // Selecting the first 3 records in Grid view:
+      maxRecords: 400,
+      view: "Grid view",
+    })
+    .eachPage(
+      function page(records, fetchNextPage) {
+        // This function (`page`) will get called for each page of records.
+
+        records.forEach(function (record) {
+          let singleStudent = {
+            name: record.get("Name"),
+            location: record.get("Location"),
+            image: record.get("Student Image") ? record.get("Student Image")[0].url : null,
+            classes: record.get("Total Classes"),
+            tests: record.get("Total Tests"),
+            homework: record.get("Total Homework"),
+            topics: record.get("Total Topics Completed"),
+          };
+          console.log("Retrieved", record.get("Name"));
+
+          allStudents.push(singleStudent);
+        });
+
+        // To fetch the next page of records, call `fetchNextPage`.
+        // If there are more records, `page` will get called again.
+        // If there are no more records, `done` will get called.
+        fetchNextPage();
+      },
+      function done(err) {
+        if (err) {
+          console.error(err);
+          return;
+        }
+
+        res.status(200).json({
+          success: true,
+          msg: `This gets all the students`,
+          allStudents,
+        });
+      }
+    );
+});
 
 const PORT = process.env.PORT || 5000;
 
