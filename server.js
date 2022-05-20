@@ -13,7 +13,7 @@ app.use(cors());
 
 const base = require("airtable").base("appvnq3LlzxDIHTqI");
 
-//? Get all classes for a particular student from classes base
+//? Get all classes for a particular Student from classes base
 app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
   let formattedClasses = [];
   // Getting today's date & time for comparision
@@ -272,7 +272,7 @@ app.get("/api/v1/classes/admin", (req, res) => {
     );
 });
 
-//? Get all topics for a particular student from classes base
+//? Get all topics for a particular Student from classes base
 app.get("/api/v1/topics/student/:studentCourse", (req, res) => {
   // Getting today's date & time for comparision
   const today = new Date();
@@ -300,7 +300,7 @@ app.get("/api/v1/topics/student/:studentCourse", (req, res) => {
   });
 });
 
-//? Get all Homework for a particular student from Homework base
+//? Get all Homework for a particular Student from Homework base
 app.get("/api/v1/homework/student/:studentID", (req, res) => {
   // Getting today's date & time for comparision
   let homeworkArray = [];
@@ -368,7 +368,7 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
   // Send all formatted topics as response
 });
 
-//? Get all Tests for a particular student from Student Tests base
+//? Get all Tests for a particular Student from Student Tests base
 app.get("/api/v1/tests/student/:studentID", (req, res) => {
   // Getting today's date & time for comparision
   let testsArray = [];
