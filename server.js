@@ -652,6 +652,80 @@ app.get("/api/v1/admin/student/:studentID", (req, res) => {
   });
 });
 
+//? Get dashboard statistics for admin
+app.get("/api/v1/admin/dashboard", (req, res) => {
+  let totalStudents = 0;
+  let upcomingClasses = 0;
+  let completedClasses = 0;
+
+  const getClasses = () => {
+    base("Classes")
+      .select({
+        // Selecting the first 3 records in Grid view:
+        maxRecords: 500,
+        view: "Grid view",
+        fields: ["Class Time", "Class Completed"],
+      })
+      .eachPage(
+        function page(records, fetchNextPage) {
+          // This function (`page`) will get called for each page of records.
+
+          records.forEach(function (record) {
+            if (record.get("Class Completed")) {
+              completedClasses++;
+            } else {
+              upcomingClasses++;
+            }
+          });
+
+          fetchNextPage();
+        },
+        function done(err) {
+          if (err) {
+            console.error(err);
+            return;
+          }
+
+          res.status(200).json({
+            success: true,
+            msg: `This gets dashboard statistics for the admin`,
+            stats: {
+              totalStudents,
+              upcomingClasses,
+              completedClasses,
+            },
+          });
+          return;
+        }
+      );
+  };
+
+  const getStudents = () => {
+    base("Students")
+      .select({
+        // Selecting the first 3 records in Grid view:
+        maxRecords: 500,
+        view: "Grid view",
+        fields: ["Name"],
+      })
+      .eachPage(
+        function page(records, fetchNextPage) {
+          totalStudents = records.length;
+          fetchNextPage();
+        },
+        function done(err) {
+          if (err) {
+            console.error(err);
+            return;
+          }
+          getClasses();
+        }
+      );
+  };
+
+  getStudents();
+});
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`));
