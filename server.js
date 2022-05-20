@@ -3,6 +3,7 @@ const dotenv = require("dotenv");
 const moment = require("moment");
 var cors = require("cors");
 const _ = require("lodash");
+const { type } = require("express/lib/response");
 
 // Load env variables
 dotenv.config({ path: "./config/config.env" });
@@ -156,7 +157,7 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
     );
 });
 
-//? Get all classes from classes base for admin
+//? Get all classes from classes base for Admin
 app.get("/api/v1/classes/admin", (req, res) => {
   let formattedClasses = [];
   // Getting today's date & time for comparision
@@ -566,7 +567,7 @@ app.get("/api/v1/class/:classID", (req, res) => {
   });
 });
 
-//? Get all students from the students database for admin
+//? Get all students from the students database for Admin
 app.get("/api/v1/admin/students", (req, res) => {
   let allStudents = [];
 
@@ -628,7 +629,7 @@ app.get("/api/v1/admin/students", (req, res) => {
     );
 });
 
-//? Get individual student from the students database for admin
+//? Get individual student from the students database for Admin
 app.get("/api/v1/admin/student/:studentID", (req, res) => {
   const studentID = req.params.studentID;
 
@@ -652,7 +653,7 @@ app.get("/api/v1/admin/student/:studentID", (req, res) => {
   });
 });
 
-//? Get dashboard statistics for admin
+//? Get dashboard statistics for Admin
 app.get("/api/v1/admin/dashboard", (req, res) => {
   let totalStudents = 0;
   let upcomingClasses = 0;
@@ -724,6 +725,111 @@ app.get("/api/v1/admin/dashboard", (req, res) => {
   };
 
   getStudents();
+});
+
+//? Get dashboard statistics for Student
+app.get("/api/v1/student/dashboard/:studentID", (req, res) => {
+  let upcomingClasses = 0;
+  let completedClasses = 0;
+  let allClasses = 0;
+  let allHomework = [];
+  let homeworkPending = 0;
+  let homeworkDue = 0;
+  let homeworkCompleted = 0;
+  let testsUpcoming = 0;
+  let testsMissed = 0;
+  let testsCompleted = 0;
+
+  //   Function to check if date in past
+  const dateInPast = function (firstDate) {
+    const today = new Date();
+    if (firstDate.setHours(0, 0, 0, 0) <= today.setHours(0, 0, 0, 0)) {
+      return true;
+    }
+    return false;
+  };
+
+  // Function to add days
+  Date.prototype.addDays = function (days) {
+    var date = new Date(this.valueOf());
+    date.setDate(date.getDate() + days);
+    return date;
+  };
+
+  base("Students").find(req.params.studentID, function (err, record) {
+    if (err) {
+      console.error(err);
+      return;
+    }
+    // console.log("Retrieved", record.fields);
+
+    // Logic for classes stats
+    const classesDone = record.get("Classes Completed");
+    classesDone.forEach((eachClass) => {
+      allClasses++;
+      if (eachClass) {
+        completedClasses++;
+      }
+    });
+
+    upcomingClasses = allClasses - completedClasses;
+
+    // Logic for homework Stats
+    const homeworkStatusArray = record.get("Homework Completed").split(",");
+    const homeworkDatesArray = record.get("Homework Due Date");
+
+    for (let i = 0; i < homeworkDatesArray.length; i++) {
+      if (homeworkStatusArray[i]) {
+        homeworkCompleted++;
+      } else {
+        const homeworkDate = homeworkDatesArray[i];
+        const isPast = dateInPast(new Date(homeworkDate).addDays(1));
+
+        if (isPast) {
+          homeworkDue++;
+        } else {
+          homeworkPending++;
+        }
+      }
+    }
+
+    // Logic for tests stats
+    const testsDatesArray = record.get("Test Due Dates");
+    const testStatusArray = record.get("Test Status").split(",");
+
+    for (let i = 0; i < testsDatesArray.length; i++) {
+      if (testStatusArray[i]) {
+        testsCompleted++;
+      } else {
+        const testDate = testsDatesArray[i];
+        const isPast = dateInPast(new Date(testDate).addDays(1));
+
+        if (isPast) {
+          testsMissed++;
+        } else {
+          testsUpcoming++;
+        }
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      msg: `This gets dashboard statistics for the student`,
+      stats: {
+        upcomingClasses,
+        allClasses,
+        mathTopicsCompleted: record.get("Sat Math Topics Completed"),
+        readingTopicsCompleted: record.get("Sat Reading Topics Completed"),
+        writingTopicsCompleted: record.get("Sat Writing Topics Completed"),
+        homeworkPending,
+        homeworkDue,
+        homeworkCompleted,
+        testsUpcoming,
+        testsMissed,
+        testsCompleted,
+      },
+    });
+  });
 });
 
 const PORT = process.env.PORT || 5000;
