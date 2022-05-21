@@ -179,6 +179,7 @@ app.get("/api/v1/classes/admin", (req, res) => {
         "Class Completed",
         "Course Section",
         "ClassID",
+        "Course",
       ],
     })
     .eachPage(
@@ -220,6 +221,7 @@ app.get("/api/v1/classes/admin", (req, res) => {
             classTopics: singleClass.get("Topics"),
             courseSection: singleClass.get("Course Section")[0],
             classID: singleClass.get("ClassID"),
+            course: singleClass.get("Course")[0],
             classStatus,
           };
 
