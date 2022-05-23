@@ -446,7 +446,17 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
       // Selecting the first 300 records in Grid view:
       maxRecords: 300,
       view: "Grid view",
-      fields: ["Name", "ClassID", "Teacher Name", "TeacherID", "Class Time", "Topics", "Class Completed"],
+      fields: [
+        "Name",
+        "ClassID",
+        "Teacher Name",
+        "TeacherID",
+        "Class Time",
+        "Topics",
+        "Class Completed",
+        "Zoom Link",
+        "Zoom Recording",
+      ],
       filterByFormula: `({TeacherID} = '${teacherID}')`,
     })
     .eachPage(
@@ -484,6 +494,8 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
             formattedTime: momentdate,
             classTopics: singleClass.get("Topics"),
             classID: singleClass.get("ClassID"),
+            zoomLink: singleClass.get("Zoom Link"),
+            zoomRecording: singleClass.get("Zoom Recording"),
             classStatus,
           };
 
