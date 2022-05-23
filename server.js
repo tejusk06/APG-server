@@ -37,6 +37,8 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
         "Students Attended",
         "Class Completed",
         "ClassID",
+        "Zoom Link",
+        "Zoom Recording",
       ],
       filterByFormula: `({CourseID} = '${courseID}')`,
     })
@@ -89,6 +91,8 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
               formattedTime: momentdate,
               classTopics: singleClass.get("Topics"),
               classID: singleClass.get("ClassID"),
+              zoomLink: singleClass.get("Zoom Link"),
+              zoomRecording: singleClass.get("Zoom Recording"),
               classStatus,
             };
 
