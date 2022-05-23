@@ -184,6 +184,8 @@ app.get("/api/v1/classes/admin", (req, res) => {
         "Course Section",
         "ClassID",
         "Course",
+        "Zoom Link",
+        "Zoom Recording",
       ],
     })
     .eachPage(
@@ -226,6 +228,8 @@ app.get("/api/v1/classes/admin", (req, res) => {
             courseSection: singleClass.get("Course Section")[0],
             classID: singleClass.get("ClassID"),
             courseID: singleClass.get("Course")[0],
+            zoomLink: singleClass.get("Zoom Link"),
+            zoomRecording: singleClass.get("Zoom Recording"),
             classStatus,
           };
 
