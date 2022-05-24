@@ -324,7 +324,7 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
       // Selecting the first 3000 records in Grid view:
       maxRecords: 6000,
       view: "Grid view",
-      fields: ["Topic Name", "Due Date", "Completed", "Attachment", "TopicID"],
+      fields: ["Topic Name", "Due Date", "Completed", "Attachment", "TopicID", "HomeworkID"],
       filterByFormula: `({StudentID} = '${studentID}')`,
     })
     .eachPage(
@@ -348,6 +348,7 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
           let homeworkItem = {
             name: record.get("Topic Name")[0],
             topicId: record.get("TopicID")[0],
+            homeworkId: record.get("HomeworkID"),
             date: record.get("Due Date"),
             completed: homeworkCompleted,
             attachment: attachment ? attachment[0].url : attachment,
