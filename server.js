@@ -787,12 +787,14 @@ app.get("/api/v1/student/dashboard/:studentID", (req, res) => {
 
     // Logic for classes stats
     const classesDone = record.get("Classes Completed");
-    classesDone.forEach((eachClass) => {
-      allClasses++;
-      if (eachClass) {
-        completedClasses++;
-      }
-    });
+    if (classesDone) {
+      classesDone.forEach((eachClass) => {
+        allClasses++;
+        if (eachClass) {
+          completedClasses++;
+        }
+      });
+    }
 
     upcomingClasses = allClasses - completedClasses;
 
