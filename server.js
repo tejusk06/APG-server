@@ -305,7 +305,7 @@ app.get("/api/v1/topics/student/:studentCourse", (req, res) => {
     res.status(200).json({
       success: true,
       msg: `This gets all the topics for a student`,
-      completedTopics,
+      completedTopics: completedTopics ? completedTopics : [],
     });
   });
 });
