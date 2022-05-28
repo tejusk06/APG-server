@@ -800,8 +800,8 @@ app.get("/api/v1/student/dashboard/:studentID", (req, res) => {
     upcomingClasses = allClasses - completedClasses;
 
     // Logic for homework Stats
-    const homeworkStatusArray = record.get("Homework Completed").split(",");
-    const homeworkDatesArray = record.get("Homework Due Date");
+    const homeworkStatusArray = record.get("Homework Completed") ? record.get("Homework Completed").split(",") : [];
+    const homeworkDatesArray = record.get("Homework Due Date") ? record.get("Homework Due Date") : [];
 
     for (let i = 0; i < homeworkDatesArray.length; i++) {
       if (homeworkStatusArray[i]) {
