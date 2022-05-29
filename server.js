@@ -216,6 +216,7 @@ app.get("/api/v1/classes/admin", (req, res) => {
           } else {
             classStatus = "Upcoming";
           }
+          console.log("1");
 
           const momentdate = moment(singleClass.get("Class Time")).add(330, "minutes").format("Do MMMM YY, h:mm a");
 
@@ -225,13 +226,14 @@ app.get("/api/v1/classes/admin", (req, res) => {
             classTime: singleClass.get("Class Time"),
             formattedTime: momentdate,
             classTopics: singleClass.get("Topics"),
-            courseSection: singleClass.get("Course Section")[0],
+            courseSection: singleClass.get("Course Section") ? singleClass.get("Course Section")[0] : "",
             classID: singleClass.get("ClassID"),
-            courseID: singleClass.get("Course")[0],
+            courseID: singleClass.get("Course") ? singleClass.get("Course")[0] : "",
             zoomLink: singleClass.get("Zoom Link"),
             zoomRecording: singleClass.get("Zoom Recording"),
             classStatus,
           };
+          console.log("2");
 
           formattedClasses.push(formattedSingleClass);
         });
