@@ -216,7 +216,6 @@ app.get("/api/v1/classes/admin", (req, res) => {
           } else {
             classStatus = "Upcoming";
           }
-          console.log("1");
 
           const momentdate = moment(singleClass.get("Class Time")).add(330, "minutes").format("Do MMMM YY, h:mm a");
 
@@ -233,7 +232,6 @@ app.get("/api/v1/classes/admin", (req, res) => {
             zoomRecording: singleClass.get("Zoom Recording"),
             classStatus,
           };
-          console.log("2");
 
           formattedClasses.push(formattedSingleClass);
         });
@@ -348,8 +346,8 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
           }
 
           let homeworkItem = {
-            name: record.get("Topic Name")[0],
-            topicId: record.get("TopicID")[0],
+            name: record.get("Topic Name") ? record.get("Topic Name")[0] : "",
+            topicId: record.get("TopicID") ? record.get("TopicID")[0] : "",
             homeworkId: record.get("HomeworkID"),
             date: record.get("Due Date"),
             completed: homeworkCompleted,
@@ -403,12 +401,12 @@ app.get("/api/v1/tests/student/:studentID", (req, res) => {
 
         records.forEach(function (record) {
           let testItem = {
-            name: record.get("Test Name")[0],
+            name: record.get("Test Name") ? record.get("Test Name")[0] : "",
             dueDate: record.get("Test Due Date") ? record.get("Test Due Date") : null,
             momentDate: record.get("Test Due Date") ? moment(record.get("Test Due Date")).format("Do MMM YYYY") : null,
             report: record.get("Test Report") ? record.get("Test Report")[0].url : null,
             status: record.get("Status") ? record.get("Status") : false,
-            questionPaper: record.get("Question Paper")[0].url,
+            questionPaper: record.get("Question Paper") ? record.get("Question Paper")[0].url : "",
             testId: record.get("TestID"),
           };
           testsArray.push(testItem);
@@ -628,7 +626,7 @@ app.get("/api/v1/admin/students", (req, res) => {
             homework: record.get("Total Homework"),
             topics: record.get("Total Topics Completed"),
             studentID: record.get("StudentID"),
-            courseID: record.get("CourseID")[0],
+            courseID: record.get("CourseID") ? record.get("CourseID")[0] : "",
           };
           console.log("Retrieved", record.get("Name"));
 
@@ -673,7 +671,7 @@ app.get("/api/v1/admin/student/:studentID", (req, res) => {
         email: record.get("Email Id"),
         image: record.get("Student Image") ? record.get("Student Image")[0].url : null,
         id: record.get("StudentID"),
-        courseID: record.get("CourseID")[0],
+        courseID: record.get("CourseID") ? record.get("CourseID")[0] : "",
       },
     });
   });
