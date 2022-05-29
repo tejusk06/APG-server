@@ -844,6 +844,7 @@ app.get("/api/v1/student/dashboard/:studentID", (req, res) => {
       stats: {
         upcomingClasses,
         allClasses,
+        totalTopicsCompleted: record.get("Total Topics Completed"),
         mathTopicsCompleted: record.get("Sat Math Topics Completed"),
         readingTopicsCompleted: record.get("Sat Reading Topics Completed"),
         writingTopicsCompleted: record.get("Sat Writing Topics Completed"),
