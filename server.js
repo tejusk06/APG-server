@@ -821,19 +821,20 @@ app.get("/api/v1/student/dashboard/:studentID", (req, res) => {
 
     // Logic for tests stats
     const testsDatesArray = record.get("Test Due Dates");
-    const testStatusArray = record.get("Test Status").split(",");
-
-    for (let i = 0; i < testsDatesArray.length; i++) {
-      if (testStatusArray[i]) {
-        testsCompleted++;
-      } else {
-        const testDate = testsDatesArray[i];
-        const isPast = dateInPast(new Date(testDate).addDays(1));
-
-        if (isPast) {
-          testsMissed++;
+    if (record.get("Test Status")) {
+      const testStatusArray = record.get("Test Status").split(",");
+      for (let i = 0; i < testsDatesArray.length; i++) {
+        if (testStatusArray[i]) {
+          testsCompleted++;
         } else {
-          testsUpcoming++;
+          const testDate = testsDatesArray[i];
+          const isPast = dateInPast(new Date(testDate).addDays(1));
+
+          if (isPast) {
+            testsMissed++;
+          } else {
+            testsUpcoming++;
+          }
         }
       }
     }
