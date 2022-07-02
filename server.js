@@ -85,7 +85,7 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
             const momentdate = moment(singleClass.get("Class Time")).add(330, "minutes").format("Do MMMM, h:mm a");
 
             const formattedSingleClass = {
-              className: singleClass.get("Name"),
+              className: singleClass.get("Class Name"),
               teacherName: singleClass.get("Teacher Name"),
               classTime: singleClass.get("Class Time"),
               formattedTime: momentdate,
