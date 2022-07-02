@@ -174,7 +174,7 @@ app.get("/api/v1/classes/admin", (req, res) => {
       maxRecords: 500,
       view: "Grid view",
       fields: [
-        "Name",
+        "Class Name",
         "CourseID",
         "Teacher Name",
         "Class Time",
@@ -453,7 +453,7 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
       maxRecords: 300,
       view: "Grid view",
       fields: [
-        "Name",
+        "Class Name",
         "ClassID",
         "Teacher Name",
         "TeacherID",
