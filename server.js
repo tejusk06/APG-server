@@ -28,7 +28,7 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
       maxRecords: 500,
       view: "Grid view",
       fields: [
-        "Name",
+        "Class Name",
         "CourseID",
         "Teacher Name",
         "Class Time",
