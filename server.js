@@ -54,7 +54,7 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
           // Checking if the student is included for the class
           if (students.includes(studentID)) {
             console.log(
-              singleClass.get("Name")
+              singleClass.get("Class Name")
               // singleClass.get("Course")[0]
               // singleClass.get("Class Completed")
               // singleClass.get("Students")
@@ -86,6 +86,7 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
 
             const formattedSingleClass = {
               className: singleClass.get("Class Name"),
+              // className: singleClass.get("Name"),
               teacherName: singleClass.get("Teacher Name"),
               classTime: singleClass.get("Class Time"),
               formattedTime: momentdate,
@@ -198,7 +199,7 @@ app.get("/api/v1/classes/admin", (req, res) => {
           // Checking if the student is included for the class
 
           console.log(
-            singleClass.get("Name")
+            singleClass.get("Class Name")
             // singleClass.get("Course")[0]
             // singleClass.get("Class Completed")
             // singleClass.get("Students")
@@ -220,7 +221,7 @@ app.get("/api/v1/classes/admin", (req, res) => {
           const momentdate = moment(singleClass.get("Class Time")).add(330, "minutes").format("Do MMMM YY, h:mm a");
 
           const formattedSingleClass = {
-            className: singleClass.get("Name"),
+            className: singleClass.get("Class Name"),
             teacherName: singleClass.get("Teacher Name"),
             classTime: singleClass.get("Class Time"),
             formattedTime: momentdate,
@@ -493,7 +494,7 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
           const momentdate = moment(singleClass.get("Class Time")).add(330, "minutes").format("Do MMMM YY, h:mm a");
 
           const formattedSingleClass = {
-            className: singleClass.get("Name"),
+            className: singleClass.get("Class Name"),
             teacherName: singleClass.get("Teacher Name"),
             classTime: singleClass.get("Class Time"),
             formattedTime: momentdate,
