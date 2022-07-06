@@ -39,6 +39,7 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
         "ClassID",
         "Zoom Link",
         "Zoom Recording",
+        "Location",
       ],
       filterByFormula: `({CourseID} = '${courseID}')`,
     })
@@ -95,6 +96,7 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
               zoomLink: singleClass.get("Zoom Link"),
               zoomRecording: singleClass.get("Zoom Recording"),
               classStatus,
+              location: singleClass.get("Location"),
             };
 
             formattedClasses.push(formattedSingleClass);
@@ -187,6 +189,7 @@ app.get("/api/v1/classes/admin", (req, res) => {
         "Course",
         "Zoom Link",
         "Zoom Recording",
+        "Location",
       ],
     })
     .eachPage(
@@ -232,6 +235,7 @@ app.get("/api/v1/classes/admin", (req, res) => {
             zoomLink: singleClass.get("Zoom Link"),
             zoomRecording: singleClass.get("Zoom Recording"),
             classStatus,
+            location: singleClass.get("Location"),
           };
 
           formattedClasses.push(formattedSingleClass);
@@ -462,6 +466,7 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
         "Class Completed",
         "Zoom Link",
         "Zoom Recording",
+        "Location",
       ],
       filterByFormula: `({TeacherID} = '${teacherID}')`,
     })
@@ -503,6 +508,7 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
             zoomLink: singleClass.get("Zoom Link"),
             zoomRecording: singleClass.get("Zoom Recording"),
             classStatus,
+            location: singleClass.get("Location"),
           };
 
           formattedClasses.push(formattedSingleClass);
