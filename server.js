@@ -660,6 +660,71 @@ app.get("/api/v1/admin/students", (req, res) => {
     );
 });
 
+//? Get all students from the students database for Coordinator
+app.get("/api/v1/coordinator/students/:coordinatorID", (req, res) => {
+  let allStudents = [];
+
+  base("Students")
+    .select({
+      // Selecting the first 3 records in Grid view:
+      maxRecords: 400,
+      view: "Grid view",
+      fields: [
+        "Name",
+        "Location",
+        "Student Image",
+        "Total Classes",
+        "Total Tests",
+        "Total Homework",
+        "Total Topics Completed",
+        "StudentID",
+        "CourseID",
+        "Coordinators",
+      ],
+    })
+    .eachPage(
+      function page(records, fetchNextPage) {
+        // This function (`page`) will get called for each page of records.
+
+        records.forEach(function (record) {
+          if (record.get("Coordinators").includes(req.params.coordinatorID)) {
+            let singleStudent = {
+              name: record.get("Name"),
+              location: record.get("Location"),
+              image: record.get("Student Image") ? record.get("Student Image")[0].url : null,
+              classes: record.get("Total Classes"),
+              tests: record.get("Total Tests"),
+              homework: record.get("Total Homework"),
+              topics: record.get("Total Topics Completed"),
+              studentID: record.get("StudentID"),
+              courseID: record.get("CourseID") ? record.get("CourseID")[0] : "",
+            };
+            console.log("Retrieved", record.get("Name"));
+
+            allStudents.push(singleStudent);
+          }
+        });
+
+        // To fetch the next page of records, call `fetchNextPage`.
+        // If there are more records, `page` will get called again.
+        // If there are no more records, `done` will get called.
+        fetchNextPage();
+      },
+      function done(err) {
+        if (err) {
+          console.error(err);
+          return;
+        }
+
+        res.status(200).json({
+          success: true,
+          msg: `This gets all the students`,
+          allStudents,
+        });
+      }
+    );
+});
+
 //? Get individual student from the students database for Admin
 app.get("/api/v1/admin/student/:studentID", (req, res) => {
   const studentID = req.params.studentID;
