@@ -13,6 +13,22 @@ app.use(cors());
 
 const base = require("airtable").base("appvnq3LlzxDIHTqI");
 
+//   Function to check if date in past
+const dateInPast = function (firstDate) {
+  const today = new Date();
+  if (firstDate.setHours(0, 0, 0, 0) <= today.setHours(0, 0, 0, 0)) {
+    return true;
+  }
+  return false;
+};
+
+// Function to add days
+Date.prototype.addDays = function (days) {
+  var date = new Date(this.valueOf());
+  date.setDate(date.getDate() + days);
+  return date;
+};
+
 //? Get all classes for a particular Student from classes base
 app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
   let formattedClasses = [];
@@ -625,11 +641,16 @@ app.get("/api/v1/admin/students", (req, res) => {
         "Location",
         "Student Image",
         "Total Classes",
+        "Classes Attended",
         "Total Tests",
+        "Test Due Dates",
         "Total Homework",
+        "Homework Completed",
+        "Homework Due Date",
         "Total Topics Completed",
         "StudentID",
         "CourseID",
+        "Test Status",
       ],
     })
     .eachPage(
@@ -637,13 +658,61 @@ app.get("/api/v1/admin/students", (req, res) => {
         // This function (`page`) will get called for each page of records.
 
         records.forEach(function (record) {
+          let testsCompleted = 0;
+          let testsUpcoming = 0;
+
+          let homeworkCompleted = 0;
+          let homeworkPending = 0;
+
+          const testsDatesArray = record.get("Test Due Dates");
+
+          if (record.get("Test Status")) {
+            const testStatusArray = record.get("Test Status").split(",");
+            for (let i = 0; i < testsDatesArray.length; i++) {
+              if (testStatusArray[i]) {
+                testsCompleted++;
+              } else {
+                const testDate = testsDatesArray[i];
+                const isPast = dateInPast(new Date(testDate).addDays(1));
+                if (!isPast) {
+                  testsUpcoming++;
+                }
+              }
+            }
+          }
+
+          // Logic for homework Stats
+
+          const homeworkStatusArray = record.get("Homework Completed")
+            ? record.get("Homework Completed").split(",")
+            : [];
+          const homeworkDatesArray = record.get("Homework Due Date") ? record.get("Homework Due Date") : [];
+
+          for (let i = 0; i < homeworkDatesArray.length; i++) {
+            if (homeworkStatusArray[i]) {
+              homeworkCompleted++;
+            } else {
+              const homeworkDate = homeworkDatesArray[i];
+              const isPast = dateInPast(new Date(homeworkDate).addDays(1));
+
+              if (!isPast) {
+                homeworkPending++;
+              }
+            }
+          }
+
           let singleStudent = {
             name: record.get("Name"),
             location: record.get("Location"),
             image: record.get("Student Image") ? record.get("Student Image")[0].url : null,
             classes: record.get("Total Classes"),
+            classesAttended: record.get("Classes Attended").length,
             tests: record.get("Total Tests"),
+            testsCompleted: testsCompleted,
+            testsUpcoming: testsUpcoming,
             homework: record.get("Total Homework"),
+            homeworkCompleted: homeworkCompleted,
+            homeworkPending: homeworkPending,
             topics: record.get("Total Topics Completed"),
             studentID: record.get("StudentID"),
             courseID: record.get("CourseID") ? record.get("CourseID")[0] : "",
@@ -848,22 +917,6 @@ app.get("/api/v1/student/dashboard/:studentID", (req, res) => {
   let testsUpcoming = 0;
   let testsMissed = 0;
   let testsCompleted = 0;
-
-  //   Function to check if date in past
-  const dateInPast = function (firstDate) {
-    const today = new Date();
-    if (firstDate.setHours(0, 0, 0, 0) <= today.setHours(0, 0, 0, 0)) {
-      return true;
-    }
-    return false;
-  };
-
-  // Function to add days
-  Date.prototype.addDays = function (days) {
-    var date = new Date(this.valueOf());
-    date.setDate(date.getDate() + days);
-    return date;
-  };
 
   base("Students").find(req.params.studentID, function (err, record) {
     if (err) {
