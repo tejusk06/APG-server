@@ -329,7 +329,7 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
       // Selecting the first 3000 records in Grid view:
       maxRecords: 6000,
       view: "Grid view",
-      fields: ["Topic Name", "Due Date", "Completed", "Attachment", "TopicID", "HomeworkID"],
+      fields: ["Topic Name", "Due Date", "Completed", "Homework Files", "TopicID", "HomeworkID"],
       filterByFormula: `({StudentID} = '${studentID}')`,
     })
     .eachPage(
@@ -339,7 +339,7 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
         console.log(records);
 
         records.forEach(function (record) {
-          var attachment = record.get(["Attachment"]);
+          var attachment = record.get(["Homework Files"]);
           if (!attachment) {
             attachment = null;
           }
