@@ -397,7 +397,16 @@ app.get("/api/v1/tests/student/:studentID", (req, res) => {
       // Selecting the first 6000 records in Grid view:
       maxRecords: 10000,
       view: "Grid view",
-      fields: ["Test Name", "Test Due Date", "Test Report", "Status", "Question Paper", "TestID"],
+      fields: [
+        "Test Name",
+        "Test Due Date",
+        "Test Report",
+        "Status",
+        "Question Paper",
+        "TestID",
+        "Answer Explanation",
+        "Video Explanations",
+      ],
       filterByFormula: `({StudentID} = '${studentID}')`,
     })
     .eachPage(
@@ -412,6 +421,8 @@ app.get("/api/v1/tests/student/:studentID", (req, res) => {
             report: record.get("Test Report") ? record.get("Test Report")[0].url : null,
             status: record.get("Status") ? record.get("Status") : false,
             questionPaper: record.get("Question Paper") ? record.get("Question Paper")[0].url : "",
+            writtenExplanation: record.get("Answer Explanation") ? record.get("Answer Explanation")[0].url : "",
+            videoExplanation: record.get("Video Explanations") ? record.get("Video Explanations")[0] : "",
             testId: record.get("TestID"),
           };
           testsArray.push(testItem);
