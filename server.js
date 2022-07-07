@@ -190,6 +190,7 @@ app.get("/api/v1/classes/admin", (req, res) => {
         "Zoom Link",
         "Zoom Recording",
         "Location",
+        "Student Names",
       ],
     })
     .eachPage(
@@ -236,6 +237,7 @@ app.get("/api/v1/classes/admin", (req, res) => {
             zoomRecording: singleClass.get("Zoom Recording"),
             classStatus,
             location: singleClass.get("Location"),
+            studentNames: singleClass.get("Student Names"),
           };
 
           formattedClasses.push(formattedSingleClass);
