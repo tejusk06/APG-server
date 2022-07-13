@@ -998,6 +998,99 @@ app.get("/api/v1/student/dashboard/:studentID", (req, res) => {
   });
 });
 
+//? Get dashboard statistics for Student V2
+app.get("/api/v1/student/dashboard-v2/:studentID", (req, res) => {
+  let upcomingClasses = 0;
+  let completedClasses = 0;
+  let allClasses = 0;
+  let allHomework = [];
+  let homeworkPending = 0;
+  let homeworkDue = 0;
+  let homeworkCompleted = 0;
+  let testsUpcoming = 0;
+  let testsMissed = 0;
+  let testsCompleted = 0;
+
+  base("Students").find(req.params.studentID, function (err, record) {
+    if (err) {
+      console.error(err);
+      return;
+    }
+    // console.log("Retrieved", record.fields);
+
+    // Logic for classes stats
+    const classesDone = record.get("Classes Completed");
+    if (classesDone) {
+      classesDone.forEach((eachClass) => {
+        allClasses++;
+        if (eachClass) {
+          completedClasses++;
+        }
+      });
+    }
+
+    upcomingClasses = allClasses - completedClasses;
+
+    // Logic for homework Stats
+    const homeworkStatusArray = record.get("Homework Completed") ? record.get("Homework Completed").split(",") : [];
+    const homeworkDatesArray = record.get("Homework Due Date") ? record.get("Homework Due Date") : [];
+
+    for (let i = 0; i < homeworkDatesArray.length; i++) {
+      if (homeworkStatusArray[i]) {
+        homeworkCompleted++;
+      } else {
+        const homeworkDate = homeworkDatesArray[i];
+        const isPast = dateInPast(new Date(homeworkDate).addDays(1));
+
+        if (isPast) {
+          homeworkDue++;
+        } else {
+          homeworkPending++;
+        }
+      }
+    }
+
+    // Logic for tests stats
+    const testsDatesArray = record.get("Test Due Dates");
+    if (record.get("Test Status")) {
+      const testStatusArray = record.get("Test Status").split(",");
+      for (let i = 0; i < testsDatesArray.length; i++) {
+        if (testStatusArray[i]) {
+          testsCompleted++;
+        } else {
+          const testDate = testsDatesArray[i];
+          const isPast = dateInPast(new Date(testDate).addDays(1));
+
+          if (isPast) {
+            testsMissed++;
+          } else {
+            testsUpcoming++;
+          }
+        }
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      msg: `This gets dashboard statistics for the student`,
+      stats: {
+        upcomingClasses,
+        allClasses,
+        totalTopicsCompleted: record.get("Total Topics Completed"),
+        mathTopicsCompleted: record.get("Sat Math Topics Completed"),
+        readingTopicsCompleted: record.get("Sat Reading Topics Completed"),
+        writingTopicsCompleted: record.get("Sat Writing Topics Completed"),
+        homeworkPending,
+        homeworkDue,
+        homeworkCompleted,
+        testsUpcoming,
+        testsMissed,
+        testsCompleted,
+      },
+    });
+  });
+});
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`));
