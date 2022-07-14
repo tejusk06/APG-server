@@ -1371,20 +1371,20 @@ app.get("/api/v1/student/dashboard-v2/:studentCourse", (req, res) => {
           actReadingTopicsCompleted,
           actScienceTopicsCompleted,
           actEnglishTopicsCompleted,
-
-          classes: {
-            upcomingClasses,
-            completedClasses,
-            missedClasses,
-            unknownClasses,
-          },
-
-          completedTopics,
-
-          homeworkArray,
-
-          testsArray,
         },
+
+        classes: {
+          upcomingClasses,
+          completedClasses,
+          missedClasses,
+          unknownClasses,
+        },
+
+        completedTopics,
+
+        homeworkArray,
+
+        testsArray,
       });
       clearInterval(allCLear);
     }
