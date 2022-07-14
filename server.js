@@ -200,7 +200,7 @@ app.get("/api/v1/classes/admin", (req, res) => {
         "Students",
         "Students Attended",
         "Class Completed",
-        "Course Section",
+        "Section",
         "ClassID",
         "Course",
         "Zoom Link",
@@ -246,7 +246,7 @@ app.get("/api/v1/classes/admin", (req, res) => {
             classTime: singleClass.get("Class Time"),
             formattedTime: momentdate,
             classTopics: singleClass.get("Topics"),
-            courseSection: singleClass.get("Course Section") ? singleClass.get("Course Section")[0] : "",
+            courseSection: singleClass.get("Section") ? singleClass.get("Section") : "",
             classID: singleClass.get("ClassID"),
             courseID: singleClass.get("Course") ? singleClass.get("Course")[0] : "",
             zoomLink: singleClass.get("Zoom Link"),
@@ -1347,8 +1347,6 @@ app.get("/api/v1/student/dashboard-v2/:studentCourse", (req, res) => {
 
   // Return response after all APIs have returned
   const allCLear = setInterval(() => {
-    // console.log("checking all clear", gotDashboardDetails, gotClassesDetails);
-
     if (gotDashboardDetails && gotClassesDetails && gotHomeworkDetails && gotTestDetails) {
       res.status(200).json({
         success: true,
