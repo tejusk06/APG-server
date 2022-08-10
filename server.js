@@ -614,8 +614,9 @@ app.get("/api/v1/class/:classID", (req, res) => {
     res.status(200).json({
       success: true,
       msg: `This gets the individual class`,
-      // classData: record,
+      // class: record,
       className: record.fields["Class Name"],
+      classLocation: record.fields["Location"],
       teacherName: record.fields["Teacher Name"],
       topicsCompleted: record.fields["Topic Completed"],
       momentDate: moment(record.fields["Class Time"]).add(330, "minutes").format("Do MMMM, h:mm a"),
