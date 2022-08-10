@@ -775,21 +775,23 @@ app.get("/api/v1/coordinator/students/:coordinatorID", (req, res) => {
         // This function (`page`) will get called for each page of records.
 
         records.forEach(function (record) {
-          if (record.get("Coordinators").includes(req.params.coordinatorID)) {
-            let singleStudent = {
-              name: record.get("Name"),
-              location: record.get("Location"),
-              image: record.get("Student Image") ? record.get("Student Image")[0].url : null,
-              classes: record.get("Total Classes"),
-              tests: record.get("Total Tests"),
-              homework: record.get("Total Homework"),
-              topics: record.get("Total Topics Completed"),
-              studentID: record.get("StudentID"),
-              courseID: record.get("CourseID") ? record.get("CourseID")[0] : "",
-            };
-            console.log("Retrieved", record.get("Name"));
+          if (record.get("Coordinators")) {
+            if (record.get("Coordinators").includes(req.params.coordinatorID)) {
+              let singleStudent = {
+                name: record.get("Name"),
+                location: record.get("Location"),
+                image: record.get("Student Image") ? record.get("Student Image")[0].url : null,
+                classes: record.get("Total Classes"),
+                tests: record.get("Total Tests"),
+                homework: record.get("Total Homework"),
+                topics: record.get("Total Topics Completed"),
+                studentID: record.get("StudentID"),
+                courseID: record.get("CourseID") ? record.get("CourseID")[0] : "",
+              };
+              console.log("Retrieved", record.get("Name"));
 
-            allStudents.push(singleStudent);
+              allStudents.push(singleStudent);
+            }
           }
         });
 
