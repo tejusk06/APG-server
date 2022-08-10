@@ -623,7 +623,7 @@ app.get("/api/v1/class/:classID", (req, res) => {
       zoomRecording: record.fields["Zoom Recording"],
     });
 
-    console.log("Retrieved", record);
+    // console.log("Retrieved", record);
   });
 });
 
