@@ -634,7 +634,7 @@ app.get("/api/v1/admin/students", (req, res) => {
   base("Students")
     .select({
       // Selecting the first 3 records in Grid view:
-      maxRecords: 400,
+      maxRecords: 1000,
       view: "Grid view",
       fields: [
         "Name",
@@ -663,6 +663,8 @@ app.get("/api/v1/admin/students", (req, res) => {
 
           let homeworkCompleted = 0;
           let homeworkPending = 0;
+
+          let classesAttended = 0;
 
           const testsDatesArray = record.get("Test Due Dates");
 
@@ -701,12 +703,16 @@ app.get("/api/v1/admin/students", (req, res) => {
             }
           }
 
+          if (record.get("Classes Attended")) {
+            classesAttended = record.get("Classes Attended").length;
+          }
+
           let singleStudent = {
             name: record.get("Name"),
             location: record.get("Location"),
             image: record.get("Student Image") ? record.get("Student Image")[0].url : null,
             classes: record.get("Total Classes"),
-            classesAttended: record.get("Classes Attended").length,
+            classesAttended: classesAttended,
             tests: record.get("Total Tests"),
             testsCompleted: testsCompleted,
             testsUpcoming: testsUpcoming,
@@ -841,7 +847,7 @@ app.get("/api/v1/admin/dashboard", (req, res) => {
     base("Classes")
       .select({
         // Selecting the first 3 records in Grid view:
-        maxRecords: 500,
+        maxRecords: 1000,
         view: "Grid view",
         fields: ["Class Time", "Class Completed"],
       })
@@ -882,14 +888,18 @@ app.get("/api/v1/admin/dashboard", (req, res) => {
   const getStudents = () => {
     base("Students")
       .select({
-        // Selecting the first 3 records in Grid view:
-        maxRecords: 500,
+        // Selecting the first 500 records in Grid view:
+        maxRecords: 1000,
         view: "Grid view",
         fields: ["Name"],
       })
       .eachPage(
         function page(records, fetchNextPage) {
-          totalStudents = records.length;
+          totalStudents = totalStudents + records.length;
+
+          records.forEach((record, index) => {
+            console.log(index, record.get("Name"));
+          });
           fetchNextPage();
         },
         function done(err) {
