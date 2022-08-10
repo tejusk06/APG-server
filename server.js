@@ -496,6 +496,7 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
         "Zoom Link",
         "Zoom Recording",
         "Location",
+        "Student Names",
       ],
       filterByFormula: `({TeacherID} = '${teacherID}')`,
     })
@@ -508,14 +509,16 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
 
           // Checking if the student is included for the class
 
-          // console.log(
-          // singleClass.get("Name"),
-          // singleClass.get("Class Completed")
-          // singleClass.get("Class Time"),
-          // singleClass.get("Topics")
-          // momentdate
-          // classStatus
-          // );
+          console
+            .log
+            // singleClass.get("Name"),
+            // singleClass.get("Class Completed")
+            // singleClass.get("Class Time"),
+            // singleClass.get("Topics")
+            // singleClass.get("Student Names")
+            // momentdate
+            // classStatus
+            ();
 
           // Marking class status for the student based on attendance marked
           if (singleClass.get("Class Completed")) {
@@ -538,6 +541,7 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
             zoomRecording: singleClass.get("Zoom Recording"),
             classStatus,
             location: singleClass.get("Location"),
+            students: singleClass.get("Student Names"),
           };
 
           formattedClasses.push(formattedSingleClass);
