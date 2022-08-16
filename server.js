@@ -42,7 +42,7 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
     .select({
       // Selecting the first 500 records in Grid view:
       maxRecords: 500,
-      view: "Grid view",
+      view: "All Classes",
       fields: [
         "Class Name",
         "CourseID",
@@ -57,32 +57,37 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
         "Zoom Recording",
         "Location",
       ],
+
       filterByFormula: `({CourseID} = '${courseID}')`,
     })
     .eachPage(
       function page(allClasses, fetchNextPage) {
         // This function (`page`) will get called for each page of allClasses.
+        // TODO Uncomment
 
         allClasses.forEach(function (singleClass) {
           let students = singleClass.get("Students");
           let studentsAttended = singleClass.get("Students Attended");
           let classStatus = null;
 
+          // Checking is the class has any assigned students?
+
           // Checking if the student is included for the class
-          if (students.includes(studentID)) {
-            console.log(
-              singleClass.get("Class Name")
-              // singleClass.get("Course")[0]
-              // singleClass.get("Class Completed")
-              // singleClass.get("Students")
-              // singleClass.get("Class Time"),
-              // singleClass.get("Topics")
-              // momentdate
-              // classStatus
-              // studentsAttended
-            );
+          if (students && students.includes(studentID)) {
+            // console.log(
+            // singleClass.get("Class Name")
+            // singleClass.get("Course")[0]
+            // singleClass.get("Class Completed")
+            // singleClass.get("Students")
+            // singleClass.get("Class Time"),
+            // singleClass.get("Topics")
+            // momentdate
+            // classStatus
+            // studentsAttended
+            // );
 
             // Marking class status for the student based on attendance marked
+
             if (singleClass.get("Class Completed")) {
               // Checking if any students attendance has been marked
               if (studentsAttended) {
@@ -103,7 +108,9 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
 
             const formattedSingleClass = {
               className: singleClass.get("Class Name"),
-              // className: singleClass.get("Name"),
+              // TODO Uncomment
+
+              className: singleClass.get("Name"),
               teacherName: singleClass.get("Teacher Name"),
               classTime: singleClass.get("Class Time"),
               formattedTime: momentdate,
@@ -118,6 +125,7 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
             formattedClasses.push(formattedSingleClass);
           }
         });
+
         /*
          To fetch the next page of classes, call `fetchNextPage`.
          If there are more classes, `page` will get called again.
@@ -166,7 +174,6 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
         res.status(200).json({
           success: true,
           msg: `This gets all the classes`,
-          // formattedClasses,
           upcomingClasses,
           completedClasses,
           missedClasses,
@@ -190,7 +197,7 @@ app.get("/api/v1/classes/admin", (req, res) => {
     .select({
       // Selecting the first 300 records in Grid view:
       maxRecords: 500,
-      view: "Grid view",
+      view: "All Classes",
       fields: [
         "Class Name",
         "CourseID",
@@ -484,7 +491,7 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
     .select({
       // Selecting the first 300 records in Grid view:
       maxRecords: 300,
-      view: "Grid view",
+      view: "All Classes",
       fields: [
         "Class Name",
         "ClassID",
@@ -855,7 +862,7 @@ app.get("/api/v1/admin/dashboard", (req, res) => {
       .select({
         // Selecting the first 3 records in Grid view:
         maxRecords: 1000,
-        view: "Grid view",
+        view: "All Classes",
         fields: ["Class Time", "Class Completed"],
       })
       .eachPage(
@@ -1137,7 +1144,7 @@ app.get("/api/v1/student/dashboard-v2/:studentCourse", (req, res) => {
     .select({
       // Selecting the first 500 records in Grid view:
       maxRecords: 500,
-      view: "Grid view",
+      view: "All Classes",
       fields: [
         "Class Name",
         "CourseID",
