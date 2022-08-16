@@ -74,17 +74,17 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
 
           // Checking if the student is included for the class
           if (students && students.includes(studentID)) {
-            // console.log(
-            // singleClass.get("Class Name")
-            // singleClass.get("Course")[0]
-            // singleClass.get("Class Completed")
-            // singleClass.get("Students")
-            // singleClass.get("Class Time"),
-            // singleClass.get("Topics")
-            // momentdate
-            // classStatus
-            // studentsAttended
-            // );
+            console.log(
+              singleClass.get("Class Name")
+              // singleClass.get("Course")[0]
+              // singleClass.get("Class Completed")
+              // singleClass.get("Students")
+              // singleClass.get("Class Time"),
+              // singleClass.get("Topics")
+              // momentdate
+              // classStatus
+              // studentsAttended
+            );
 
             // Marking class status for the student based on attendance marked
 
@@ -108,9 +108,7 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
 
             const formattedSingleClass = {
               className: singleClass.get("Class Name"),
-              // TODO Uncomment
-
-              className: singleClass.get("Name"),
+              // className: singleClass.get("Name"),
               teacherName: singleClass.get("Teacher Name"),
               classTime: singleClass.get("Class Time"),
               formattedTime: momentdate,
