@@ -108,7 +108,6 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
 
             const formattedSingleClass = {
               className: singleClass.get("Class Name"),
-              // className: singleClass.get("Name"),
               teacherName: singleClass.get("Teacher Name"),
               classTime: singleClass.get("Class Time"),
               formattedTime: momentdate,
@@ -1169,7 +1168,7 @@ app.get("/api/v1/student/dashboard-v2/:studentCourse", (req, res) => {
           let classStatus = null;
 
           // Checking if the student is included for the class
-          if (students.includes(studentID)) {
+          if (students && students.includes(studentID)) {
             // Marking class status for the student based on attendance marked
             if (singleClass.get("Class Completed")) {
               // Checking if any students attendance has been marked
