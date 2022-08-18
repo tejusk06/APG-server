@@ -761,29 +761,6 @@ app.get("/api/v1/admin/students", (req, res) => {
 app.get("/api/v1/coordinatorAdmin/students/:airtableIdOrRole", (req, res) => {
   let allStudents = [];
 
-  // Function to add student to the all students array
-  const addStudent = (record) => {
-    let singleStudent = {
-      name: record.get("Name"),
-      location: record.get("Location"),
-      image: record.get("Student Image") ? record.get("Student Image")[0].url : null,
-      classes: record.get("Total Classes"),
-      classesAttended: classesAttended,
-      tests: record.get("Total Tests"),
-      testsCompleted: testsCompleted,
-      testsUpcoming: testsUpcoming,
-      homework: record.get("Total Homework"),
-      homeworkCompleted: homeworkCompleted,
-      homeworkPending: homeworkPending,
-      topics: record.get("Total Topics Completed"),
-      studentID: record.get("StudentID"),
-      courseID: record.get("CourseID") ? record.get("CourseID")[0] : "",
-    };
-    console.log("Retrieved", record.get("Name"));
-
-    allStudents.push(singleStudent);
-  };
-
   base("Students")
     .select({
       // Selecting the first 3 records in Grid view:
@@ -809,6 +786,29 @@ app.get("/api/v1/coordinatorAdmin/students/:airtableIdOrRole", (req, res) => {
     .eachPage(
       function page(records, fetchNextPage) {
         // This function (`page`) will get called for each page of records.
+
+        // Function to add student to the all students array
+        const addStudent = (record) => {
+          let singleStudent = {
+            name: record.get("Name"),
+            location: record.get("Location"),
+            image: record.get("Student Image") ? record.get("Student Image")[0].url : null,
+            classes: record.get("Total Classes"),
+            classesAttended: classesAttended,
+            tests: record.get("Total Tests"),
+            testsCompleted: testsCompleted,
+            testsUpcoming: testsUpcoming,
+            homework: record.get("Total Homework"),
+            homeworkCompleted: homeworkCompleted,
+            homeworkPending: homeworkPending,
+            topics: record.get("Total Topics Completed"),
+            studentID: record.get("StudentID"),
+            courseID: record.get("CourseID") ? record.get("CourseID")[0] : "",
+          };
+          console.log("Retrieved", record.get("Name"));
+
+          allStudents.push(singleStudent);
+        };
 
         records.forEach(function (record) {
           // if admin is requesting return all students
