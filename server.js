@@ -781,6 +781,7 @@ app.get("/api/v1/coordinatorAdmin/students/:airtableIdOrRole", (req, res) => {
         "StudentID",
         "CourseID",
         "Test Status",
+        "Coordinators",
       ],
     })
     .eachPage(
