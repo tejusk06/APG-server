@@ -758,7 +758,7 @@ app.get("/api/v1/admin/students", (req, res) => {
 });
 
 //? Get all students from the students database for Coordinator
-app.get("/api/v1/coordinator/students/:coordinatorID", (req, res) => {
+app.get("/api/v1/coordinatorAdmin/students/:airtableIdOrRole", (req, res) => {
   let allStudents = [];
 
   base("Students")
@@ -783,23 +783,31 @@ app.get("/api/v1/coordinator/students/:coordinatorID", (req, res) => {
       function page(records, fetchNextPage) {
         // This function (`page`) will get called for each page of records.
 
-        records.forEach(function (record) {
-          if (record.get("Coordinators")) {
-            if (record.get("Coordinators").includes(req.params.coordinatorID)) {
-              let singleStudent = {
-                name: record.get("Name"),
-                location: record.get("Location"),
-                image: record.get("Student Image") ? record.get("Student Image")[0].url : null,
-                classes: record.get("Total Classes"),
-                tests: record.get("Total Tests"),
-                homework: record.get("Total Homework"),
-                topics: record.get("Total Topics Completed"),
-                studentID: record.get("StudentID"),
-                courseID: record.get("CourseID") ? record.get("CourseID")[0] : "",
-              };
-              console.log("Retrieved", record.get("Name"));
+        const addStudent = (record) => {
+          let singleStudent = {
+            name: record.get("Name"),
+            location: record.get("Location"),
+            image: record.get("Student Image") ? record.get("Student Image")[0].url : null,
+            classes: record.get("Total Classes"),
+            tests: record.get("Total Tests"),
+            homework: record.get("Total Homework"),
+            topics: record.get("Total Topics Completed"),
+            studentID: record.get("StudentID"),
+            courseID: record.get("CourseID") ? record.get("CourseID")[0] : "",
+          };
+          console.log("Retrieved", record.get("Name"));
 
-              allStudents.push(singleStudent);
+          allStudents.push(singleStudent);
+        };
+
+        records.forEach(function (record) {
+          // if admin is requesting return all students
+          if ((req.params.airtableIdOrRole = "admin")) {
+            addStudent(record);
+          } else if (record.get("Coordinators")) {
+            // if coordinator is requesting return only students assigned to him/her
+            if (record.get("Coordinators").includes(req.params.airtableIdOrRole)) {
+              addStudent(record);
             }
           }
         });
