@@ -757,9 +757,32 @@ app.get("/api/v1/admin/students", (req, res) => {
     );
 });
 
-//? Get all students from the students database for Coordinator
+//? Get all students from the students database for Coordinator and Admin
 app.get("/api/v1/coordinatorAdmin/students/:airtableIdOrRole", (req, res) => {
   let allStudents = [];
+
+  // Function to add student to the all students array
+  const addStudent = (record) => {
+    let singleStudent = {
+      name: record.get("Name"),
+      location: record.get("Location"),
+      image: record.get("Student Image") ? record.get("Student Image")[0].url : null,
+      classes: record.get("Total Classes"),
+      classesAttended: classesAttended,
+      tests: record.get("Total Tests"),
+      testsCompleted: testsCompleted,
+      testsUpcoming: testsUpcoming,
+      homework: record.get("Total Homework"),
+      homeworkCompleted: homeworkCompleted,
+      homeworkPending: homeworkPending,
+      topics: record.get("Total Topics Completed"),
+      studentID: record.get("StudentID"),
+      courseID: record.get("CourseID") ? record.get("CourseID")[0] : "",
+    };
+    console.log("Retrieved", record.get("Name"));
+
+    allStudents.push(singleStudent);
+  };
 
   base("Students")
     .select({
@@ -771,34 +794,21 @@ app.get("/api/v1/coordinatorAdmin/students/:airtableIdOrRole", (req, res) => {
         "Location",
         "Student Image",
         "Total Classes",
+        "Classes Attended",
         "Total Tests",
+        "Test Due Dates",
         "Total Homework",
+        "Homework Completed",
+        "Homework Due Date",
         "Total Topics Completed",
         "StudentID",
         "CourseID",
-        "Coordinators",
+        "Test Status",
       ],
     })
     .eachPage(
       function page(records, fetchNextPage) {
         // This function (`page`) will get called for each page of records.
-
-        const addStudent = (record) => {
-          let singleStudent = {
-            name: record.get("Name"),
-            location: record.get("Location"),
-            image: record.get("Student Image") ? record.get("Student Image")[0].url : null,
-            classes: record.get("Total Classes"),
-            tests: record.get("Total Tests"),
-            homework: record.get("Total Homework"),
-            topics: record.get("Total Topics Completed"),
-            studentID: record.get("StudentID"),
-            courseID: record.get("CourseID") ? record.get("CourseID")[0] : "",
-          };
-          console.log("Retrieved", record.get("Name"));
-
-          allStudents.push(singleStudent);
-        };
 
         records.forEach(function (record) {
           // if admin is requesting return all students
