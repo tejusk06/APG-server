@@ -789,6 +789,55 @@ app.get("/api/v1/coordinatorAdmin/students/:airtableIdOrRole", (req, res) => {
 
         // Function to add student to the all students array
         const addStudent = (record) => {
+          let testsCompleted = 0;
+          let testsUpcoming = 0;
+
+          let homeworkCompleted = 0;
+          let homeworkPending = 0;
+
+          let classesAttended = 0;
+
+          const testsDatesArray = record.get("Test Due Dates");
+
+          if (record.get("Test Status")) {
+            const testStatusArray = record.get("Test Status").split(",");
+            for (let i = 0; i < testsDatesArray.length; i++) {
+              if (testStatusArray[i]) {
+                testsCompleted++;
+              } else {
+                const testDate = testsDatesArray[i];
+                const isPast = dateInPast(new Date(testDate).addDays(1));
+                if (!isPast) {
+                  testsUpcoming++;
+                }
+              }
+            }
+          }
+
+          // Logic for homework Stats
+
+          const homeworkStatusArray = record.get("Homework Completed")
+            ? record.get("Homework Completed").split(",")
+            : [];
+          const homeworkDatesArray = record.get("Homework Due Date") ? record.get("Homework Due Date") : [];
+
+          for (let i = 0; i < homeworkDatesArray.length; i++) {
+            if (homeworkStatusArray[i]) {
+              homeworkCompleted++;
+            } else {
+              const homeworkDate = homeworkDatesArray[i];
+              const isPast = dateInPast(new Date(homeworkDate).addDays(1));
+
+              if (!isPast) {
+                homeworkPending++;
+              }
+            }
+          }
+
+          if (record.get("Classes Attended")) {
+            classesAttended = record.get("Classes Attended").length;
+          }
+
           let singleStudent = {
             name: record.get("Name"),
             location: record.get("Location"),
