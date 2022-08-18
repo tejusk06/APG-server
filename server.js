@@ -802,7 +802,7 @@ app.get("/api/v1/coordinatorAdmin/students/:airtableIdOrRole", (req, res) => {
 
         records.forEach(function (record) {
           // if admin is requesting return all students
-          if ((req.params.airtableIdOrRole = "admin")) {
+          if (req.params.airtableIdOrRole == "admin") {
             addStudent(record);
           } else if (record.get("Coordinators")) {
             // if coordinator is requesting return only students assigned to him/her
