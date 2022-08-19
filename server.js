@@ -501,6 +501,7 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
         "Zoom Recording",
         "Location",
         "Student Names",
+        "Notes",
       ],
       filterByFormula: `({TeacherID} = '${teacherID}')`,
     })
@@ -513,16 +514,15 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
 
           // Checking if the student is included for the class
 
-          console
-            .log
-            // singleClass.get("Name"),
+          console.log(
+            singleClass.get("Name")
             // singleClass.get("Class Completed")
             // singleClass.get("Class Time"),
             // singleClass.get("Topics")
             // singleClass.get("Student Names")
             // momentdate
             // classStatus
-            ();
+          );
 
           // Marking class status for the student based on attendance marked
           if (singleClass.get("Class Completed")) {
@@ -546,6 +546,7 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
             classStatus,
             location: singleClass.get("Location"),
             students: singleClass.get("Student Names"),
+            notes: singleClass.get("Notes"),
           };
 
           formattedClasses.push(formattedSingleClass);
@@ -917,7 +918,7 @@ app.get("/api/v1/admin/student/:studentID", (req, res) => {
 });
 
 //? Get dashboard statistics for Admin
-app.get("/api/v1/admin/dashboard", (req, res) => {
+app.get("/api/v1/coordinatorAdmin/dashboard/:airtableIdOrRole", (req, res) => {
   let totalStudents = 0;
   let upcomingClasses = 0;
   let completedClasses = 0;
@@ -928,17 +929,28 @@ app.get("/api/v1/admin/dashboard", (req, res) => {
         // Selecting the first 3 records in Grid view:
         maxRecords: 1000,
         view: "All Classes",
-        fields: ["Class Time", "Class Completed"],
+        fields: ["Class Time", "Class Completed", "Coordinator"],
       })
       .eachPage(
         function page(records, fetchNextPage) {
           // This function (`page`) will get called for each page of records.
 
-          records.forEach(function (record) {
+          const incrementClassCount = (record) => {
             if (record.get("Class Completed")) {
               completedClasses++;
             } else {
               upcomingClasses++;
+            }
+          };
+
+          records.forEach(function (record) {
+            if (req.params.airtableIdOrRole == "admin") {
+              incrementClassCount(record);
+            } else if (record.get("Coordinator")) {
+              // if coordinator is requesting return only students assigned to him/her
+              if (record.get("Coordinator").includes(req.params.airtableIdOrRole)) {
+                incrementClassCount(record);
+              }
             }
           });
 
@@ -970,11 +982,20 @@ app.get("/api/v1/admin/dashboard", (req, res) => {
         // Selecting the first 500 records in Grid view:
         maxRecords: 1000,
         view: "Grid view",
-        fields: ["Name"],
+        fields: ["Name", "Coordinators"],
       })
       .eachPage(
         function page(records, fetchNextPage) {
-          totalStudents = totalStudents + records.length;
+          if (req.params.airtableIdOrRole == "admin") {
+            totalStudents = totalStudents + records.length;
+          } else {
+            records.forEach(function (record) {
+              // if coordinator is requesting return only students assigned to him/her
+              if (record.get("Coordinators") && record.get("Coordinators").includes(req.params.airtableIdOrRole)) {
+                totalStudents++;
+              }
+            });
+          }
 
           records.forEach((record, index) => {
             console.log(index, record.get("Name"));
