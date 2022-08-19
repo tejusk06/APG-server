@@ -363,7 +363,15 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
       // Selecting the first 3000 records in Grid view:
       maxRecords: 6000,
       view: "Grid view",
-      fields: ["Topic Name", "Due Date", "Completed", "Homework Files", "TopicID", "HomeworkID"],
+      fields: [
+        "Topic Name",
+        "Due Date",
+        "Completed",
+        "Homework Files",
+        "TopicID",
+        "HomeworkID",
+        "Course Section Homework Name",
+      ],
       filterByFormula: `({StudentID} = '${studentID}')`,
     })
     .eachPage(
@@ -392,6 +400,7 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
             completed: homeworkCompleted,
             attachment: attachment ? attachment[0].url : attachment,
             momentDate: moment(record.get("Due Date")).format("Do MMM"),
+            courseSectionHomeworkName: record.get("Course Section Homework Name"),
           };
           homeworkArray.push(homeworkItem);
         });
