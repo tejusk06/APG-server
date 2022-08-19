@@ -184,8 +184,8 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
     );
 });
 
-//? Get all classes from classes base for Admin
-app.get("/api/v1/classes/admin", (req, res) => {
+//? Get all classes from classes base for Coordinator/Admin
+app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
   let formattedClasses = [];
   // Getting today's date & time for comparision
   const today = new Date();
@@ -211,13 +211,14 @@ app.get("/api/v1/classes/admin", (req, res) => {
         "Zoom Recording",
         "Location",
         "Student Names",
+        "Coordinator",
       ],
     })
     .eachPage(
       function page(allClasses, fetchNextPage) {
         // This function (`page`) will get called for each page of allClasses.
 
-        allClasses.forEach(function (singleClass) {
+        const formatClass = (singleClass) => {
           let classStatus = null;
 
           // Checking if the student is included for the class
@@ -261,6 +262,17 @@ app.get("/api/v1/classes/admin", (req, res) => {
           };
 
           formattedClasses.push(formattedSingleClass);
+        };
+
+        allClasses.forEach(function (singleClass) {
+          if (req.params.airtableIdOrRole == "admin") {
+            formatClass(singleClass);
+          } else if (singleClass.get("Coordinator")) {
+            // if coordinator is requesting return only students assigned to him/her
+            if (singleClass.get("Coordinator").includes(req.params.airtableIdOrRole)) {
+              formatClass(singleClass);
+            }
+          }
         });
         /*
          To fetch the next page of classes, call `fetchNextPage`.
