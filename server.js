@@ -212,6 +212,7 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
         "Location",
         "Student Names",
         "Coordinator",
+        "Notes",
       ],
     })
     .eachPage(
@@ -259,6 +260,7 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
             classStatus,
             location: singleClass.get("Location"),
             students: singleClass.get("Student Names"),
+            notes: singleClass.get("Notes"),
           };
 
           formattedClasses.push(formattedSingleClass);
