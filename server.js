@@ -1520,6 +1520,26 @@ app.get("/api/v1/student/dashboard-v2/:studentCourse", (req, res) => {
   }, 200);
 });
 
+//? Get completed topic names of a student for coordinator/admin
+app.get("/api/v1/coordinatorAdmin/topics/:studentID", (req, res) => {
+  base("Students").find(req.params.studentID, function (err, record) {
+    if (err) {
+      console.error(err);
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      msg: `This gets the completed student topics for coordinator and admin `,
+      stats: {
+        completedTopics: record.get("Topics Completed Names").split(","),
+      },
+    });
+
+    console.log("Retrieved", record.id);
+  });
+});
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`));
