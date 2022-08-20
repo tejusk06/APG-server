@@ -56,6 +56,7 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
         "Zoom Link",
         "Zoom Recording",
         "Location",
+        "Notes",
       ],
 
       filterByFormula: `({CourseID} = '${courseID}')`,
@@ -117,6 +118,7 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
               zoomRecording: singleClass.get("Zoom Recording"),
               classStatus,
               location: singleClass.get("Location"),
+              notes: singleClass.get("Notes"),
             };
 
             formattedClasses.push(formattedSingleClass);
@@ -928,7 +930,7 @@ app.get("/api/v1/admin/student/:studentID", (req, res) => {
 
     res.status(200).json({
       success: true,
-      msg: `This gets all the students`,
+      msg: `This gets the student details`,
       student: {
         name: record.get("Name"),
         email: record.get("Email Id"),
