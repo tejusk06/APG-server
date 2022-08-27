@@ -374,6 +374,7 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
         "Homework Files",
         "TopicID",
         "HomeworkID",
+        "Course Section",
         "Course Section Homework Name",
       ],
       filterByFormula: `({StudentID} = '${studentID}')`,
@@ -404,6 +405,7 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
             completed: homeworkCompleted,
             attachment: attachment ? attachment[0].url : attachment,
             momentDate: moment(record.get("Due Date")).format("Do MMM"),
+            courseSection: record.get("Course Section")[0],
             courseSectionHomeworkName: record.get("Course Section Homework Name"),
           };
           homeworkArray.push(homeworkItem);
