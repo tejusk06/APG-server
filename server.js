@@ -233,8 +233,11 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
 
           // Checking if the student is included for the class
 
+          const momentdate = moment(singleClass.get("Class Time")).add(330, "minutes").format("Do MMMM YY, h:mm a");
+
           console.log(
-            daysFromToday
+            momentdate,
+            momentToday
             // singleClass.get("Class Name")
             // singleClass.get("Course")[0]
             // singleClass.get("Class Completed")
@@ -256,8 +259,6 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
             classStatus = "Missed";
           }
 
-          const momentdate = moment(singleClass.get("Class Time")).add(330, "minutes").format("Do MMMM YY, h:mm a");
-
           const formattedSingleClass = {
             className: singleClass.get("Class Name"),
             teacherName: singleClass.get("Teacher Name"),
@@ -274,6 +275,8 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
             students: singleClass.get("Student Names"),
             notes: singleClass.get("Notes"),
             daysFromToday: daysFromToday,
+            momentToday: momentToday,
+            momentClassTime: momentClassTime,
           };
 
           formattedClasses.push(formattedSingleClass);
