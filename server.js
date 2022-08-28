@@ -253,7 +253,7 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
           } else if (daysFromToday >= 0) {
             classStatus = "Upcoming";
           } else if (daysFromToday < 0) {
-            classStatus = "Missed";
+            classStatus = "Overdue";
           }
 
           const formattedSingleClass = {
@@ -310,11 +310,11 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
         });
 
         // Getting all the Missed classes
-        const missedClasses = formattedClasses.filter((eachClass) => {
-          return eachClass.classStatus == "Missed";
+        const overdueClasses = formattedClasses.filter((eachClass) => {
+          return eachClass.classStatus == "Overdue";
         });
 
-        const missedSorted = missedClasses.sort(function compare(a, b) {
+        const overdueSorted = overdueClasses.sort(function compare(a, b) {
           var dateA = new Date(a.classTime);
           var dateB = new Date(b.classTime);
           return dateA - dateB;
@@ -336,7 +336,7 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
           // formattedClasses,
           upcomingClasses: upcomingSorted,
           completedClasses: completedSorted,
-          missedClasses: missedSorted,
+          overdueClasses: overdueSorted,
         });
         if (err) {
           console.error(err);
@@ -588,7 +588,7 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
           } else if (daysFromToday >= 0) {
             classStatus = "Upcoming";
           } else if (daysFromToday < 0) {
-            classStatus = "Missed";
+            classStatus = "Overdue";
           }
 
           const formattedSingleClass = {
@@ -632,11 +632,11 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
         });
 
         // Getting all the Missed classes
-        const missedClasses = formattedClasses.filter((eachClass) => {
-          return eachClass.classStatus == "Missed";
+        const overdueClasses = formattedClasses.filter((eachClass) => {
+          return eachClass.classStatus == "Overdue";
         });
 
-        const missedSorted = missedClasses.sort(function compare(a, b) {
+        const overdueSorted = overdueClasses.sort(function compare(a, b) {
           var dateA = new Date(a.classTime);
           var dateB = new Date(b.classTime);
           return dateA - dateB;
@@ -667,7 +667,7 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
           // formattedClasses,
           upcomingClasses: upcomingSorted,
           completedClasses: completedSorted,
-          missedClasses: missedSorted,
+          overdueClasses: overdueSorted,
           unknownClasses,
         });
         if (err) {
