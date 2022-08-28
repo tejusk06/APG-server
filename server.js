@@ -228,7 +228,7 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
           let classStatus = null;
 
           let classTime = new Date(singleClass.get("Class Time")).toDateString();
-          let momentClassTime = moment(classTime);
+          let momentClassTime = moment(classTime).add(330, "minutes");
           let daysFromToday = momentClassTime.diff(momentToday, "days");
 
           // Checking if the student is included for the class
@@ -573,7 +573,7 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
           // Checking if the student is included for the class
 
           console.log(
-            singleClass.get("Name")
+            singleClass.get("Class Name")
             // singleClass.get("Class Completed")
             // singleClass.get("Class Time"),
             // singleClass.get("Topics")
