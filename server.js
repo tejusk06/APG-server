@@ -191,8 +191,7 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
   let formattedClasses = [];
   // Getting today's date & time for comparision
   const today = new Date();
-  let utc = today.getTime() + today.getTimezoneOffset() * 60000;
-  let newTime = new Date(utc + 3600000 * +5.5).toDateString();
+  let newTime = today.toDateString();
   let momentToday = moment(newTime);
 
   base("Classes")
@@ -227,7 +226,7 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
         const formatClass = (singleClass) => {
           let classStatus = null;
 
-          let classTime = new Date(moment(singleClass.get("Class Time")).add(330, "minutes")).toDateString();
+          let classTime = new Date(singleClass.get("Class Time")).toDateString();
           let momentClassTime = moment(classTime);
           let daysFromToday = momentClassTime.diff(momentToday, "days");
 
@@ -236,9 +235,7 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
           const momentdate = moment(singleClass.get("Class Time")).format("Do MMMM YY, h:mm a");
 
           console.log(
-            momentdate,
-            momentToday
-            // singleClass.get("Class Name")
+            singleClass.get("Class Name")
             // singleClass.get("Course")[0]
             // singleClass.get("Class Completed")
             // singleClass.get("Students")
@@ -535,8 +532,7 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
   let formattedClasses = [];
   // Getting today's date & time for comparision
   const today = new Date();
-  let utc = today.getTime() + today.getTimezoneOffset() * 60000;
-  let newTime = new Date(utc + 3600000 * +5.5).toDateString();
+  let newTime = today.toDateString();
   let momentToday = moment(newTime);
 
   const teacherID = req.params.teacherID;
@@ -575,6 +571,8 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
 
           // Checking if the student is included for the class
 
+          const momentdate = moment(singleClass.get("Class Time")).format("Do MMMM YY, h:mm a");
+
           console.log(
             singleClass.get("Class Name")
             // singleClass.get("Class Completed")
@@ -594,8 +592,6 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
           } else if (daysFromToday < 0) {
             classStatus = "Missed";
           }
-
-          const momentdate = moment(singleClass.get("Class Time")).add(330, "minutes").format("Do MMMM YY, h:mm a");
 
           const formattedSingleClass = {
             className: singleClass.get("Class Name"),
