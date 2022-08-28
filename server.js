@@ -191,6 +191,9 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
   let formattedClasses = [];
   // Getting today's date & time for comparision
   const today = new Date();
+  let utc = today.getTime() + today.getTimezoneOffset() * 60000;
+  let newTime = new Date(utc + 3600000 * +5.5);
+  let istTime = newTime.toLocaleString;
 
   base("Classes")
     .select({
@@ -263,7 +266,7 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
             location: singleClass.get("Location"),
             students: singleClass.get("Student Names"),
             notes: singleClass.get("Notes"),
-            today: new Date(),
+            istTime: istTime,
           };
 
           formattedClasses.push(formattedSingleClass);
