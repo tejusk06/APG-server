@@ -233,7 +233,7 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
 
           // Checking if the student is included for the class
 
-          const momentdate = moment(singleClass.get("Class Time")).add(330, "minutes").format("Do MMMM YY, h:mm a");
+          const momentdate = moment(singleClass.get("Class Time")).format("Do MMMM YY, h:mm a");
 
           console.log(
             momentdate,
