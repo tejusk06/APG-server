@@ -192,8 +192,8 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
   // Getting today's date & time for comparision
   const today = new Date();
   let utc = today.getTime() + today.getTimezoneOffset() * 60000;
-  let newTime = new Date(utc + 3600000 * +5.5);
-  let istTime = newTime.toLocaleString;
+  let newTime = new Date(utc + 3600000 * +5.5).toDateString();
+  let momentToday = moment(newTime);
 
   base("Classes")
     .select({
@@ -227,10 +227,15 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
         const formatClass = (singleClass) => {
           let classStatus = null;
 
+          let classTime = new Date(singleClass.get("Class Time")).toDateString();
+          let momentClassTime = moment(classTime);
+          let daysFromToday = momentClassTime.diff(momentToday, "days");
+
           // Checking if the student is included for the class
 
           console.log(
-            singleClass.get("Class Name")
+            daysFromToday
+            // singleClass.get("Class Name")
             // singleClass.get("Course")[0]
             // singleClass.get("Class Completed")
             // singleClass.get("Students")
@@ -245,8 +250,10 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
           if (singleClass.get("Class Completed")) {
             // Checking if any students attendance has been marked
             classStatus = "Completed";
-          } else {
+          } else if (daysFromToday >= 0) {
             classStatus = "Upcoming";
+          } else if (daysFromToday < 0) {
+            classStatus = "Missed";
           }
 
           const momentdate = moment(singleClass.get("Class Time")).add(330, "minutes").format("Do MMMM YY, h:mm a");
@@ -266,7 +273,7 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
             location: singleClass.get("Location"),
             students: singleClass.get("Student Names"),
             notes: singleClass.get("Notes"),
-            istTime: istTime,
+            daysFromToday: daysFromToday,
           };
 
           formattedClasses.push(formattedSingleClass);
@@ -304,6 +311,17 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
           return dateA - dateB;
         });
 
+        // Getting all the Missed classes
+        const missedClasses = formattedClasses.filter((eachClass) => {
+          return eachClass.classStatus == "Missed";
+        });
+
+        const missedSorted = missedClasses.sort(function compare(a, b) {
+          var dateA = new Date(a.classTime);
+          var dateB = new Date(b.classTime);
+          return dateA - dateB;
+        });
+
         const completedClasses = formattedClasses.filter((eachClass) => {
           return eachClass.classStatus == "Completed";
         });
@@ -320,6 +338,7 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
           // formattedClasses,
           upcomingClasses: upcomingSorted,
           completedClasses: completedSorted,
+          missedClasses: missedSorted,
         });
         if (err) {
           console.error(err);
@@ -513,6 +532,10 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
   let formattedClasses = [];
   // Getting today's date & time for comparision
   const today = new Date();
+  let utc = today.getTime() + today.getTimezoneOffset() * 60000;
+  let newTime = new Date(utc + 3600000 * +5.5).toDateString();
+  let momentToday = moment(newTime);
+
   const teacherID = req.params.teacherID;
 
   base("Classes")
@@ -543,6 +566,10 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
         allClasses.forEach(function (singleClass) {
           let classStatus = null;
 
+          let classTime = new Date(singleClass.get("Class Time")).toDateString();
+          let momentClassTime = moment(classTime);
+          let daysFromToday = momentClassTime.diff(momentToday, "days");
+
           // Checking if the student is included for the class
 
           console.log(
@@ -559,8 +586,10 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
           if (singleClass.get("Class Completed")) {
             // Checking if any students attendance has been marked
             classStatus = "Completed";
-          } else {
+          } else if (daysFromToday >= 0) {
             classStatus = "Upcoming";
+          } else if (daysFromToday < 0) {
+            classStatus = "Missed";
           }
 
           const momentdate = moment(singleClass.get("Class Time")).add(330, "minutes").format("Do MMMM YY, h:mm a");
@@ -578,6 +607,7 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
             location: singleClass.get("Location"),
             students: singleClass.get("Student Names"),
             notes: singleClass.get("Notes"),
+            daysFromToday: daysFromToday,
           };
 
           formattedClasses.push(formattedSingleClass);
@@ -599,6 +629,17 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
         });
 
         const upcomingSorted = upcomingClasses.sort(function compare(a, b) {
+          var dateA = new Date(a.classTime);
+          var dateB = new Date(b.classTime);
+          return dateA - dateB;
+        });
+
+        // Getting all the Missed classes
+        const missedClasses = formattedClasses.filter((eachClass) => {
+          return eachClass.classStatus == "Missed";
+        });
+
+        const missedSorted = missedClasses.sort(function compare(a, b) {
           var dateA = new Date(a.classTime);
           var dateB = new Date(b.classTime);
           return dateA - dateB;
@@ -629,7 +670,7 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
           // formattedClasses,
           upcomingClasses: upcomingSorted,
           completedClasses: completedSorted,
-          // missedClasses,
+          missedClasses: missedSorted,
           unknownClasses,
         });
         if (err) {
