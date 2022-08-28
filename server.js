@@ -227,8 +227,8 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
         const formatClass = (singleClass) => {
           let classStatus = null;
 
-          let classTime = new Date(singleClass.get("Class Time")).toDateString();
-          let momentClassTime = moment(classTime).add(330, "minutes");
+          let classTime = new Date(moment(singleClass.get("Class Time")).add(330, "minutes")).toDateString();
+          let momentClassTime = moment(classTime);
           let daysFromToday = momentClassTime.diff(momentToday, "days");
 
           // Checking if the student is included for the class
