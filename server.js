@@ -982,6 +982,7 @@ app.get("/api/v1/admin/student/:studentID", (req, res) => {
         id: record.get("StudentID"),
         courseID: record.get("CourseID") ? record.get("CourseID")[0] : "",
         completedTopics: record.get("Topics Completed Names").split(","),
+        completedTopicsSections: record.get("Topics Completed Sections").split(","),
       },
     });
   });
