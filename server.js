@@ -263,6 +263,7 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
             location: singleClass.get("Location"),
             students: singleClass.get("Student Names"),
             notes: singleClass.get("Notes"),
+            today: new Date(),
           };
 
           formattedClasses.push(formattedSingleClass);
