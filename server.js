@@ -29,7 +29,7 @@ Date.prototype.addDays = function (days) {
   return date;
 };
 
-//? Get all classes for a particular Student from classes base
+//? Get all classes for a particular Student from classes base - Limit 100
 app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
   let formattedClasses = [];
   // Getting today's date & time for comparision
@@ -41,7 +41,7 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
   base("Classes")
     .select({
       // Selecting the first 500 records in Grid view:
-      maxRecords: 500,
+      maxRecords: 100,
       view: "All Classes",
       fields: [
         "Class Name",
@@ -75,18 +75,6 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
 
           // Checking if the student is included for the class
           if (students && students.includes(studentID)) {
-            console.log(
-              singleClass.get("Class Name")
-              // singleClass.get("Course")[0]
-              // singleClass.get("Class Completed")
-              // singleClass.get("Students")
-              // singleClass.get("Class Time"),
-              // singleClass.get("Topics")
-              // momentdate
-              // classStatus
-              // studentsAttended
-            );
-
             // Marking class status for the student based on attendance marked
 
             if (singleClass.get("Class Completed")) {
@@ -134,8 +122,6 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
         fetchNextPage();
       },
       function done(err) {
-        console.log("Done.");
-
         // Getting all the upcoming classes
         const upcomingClasses = formattedClasses.filter((eachClass) => {
           return eachClass.classStatus == "Upcoming";
@@ -186,7 +172,7 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
     );
 });
 
-//? Get all classes from classes base for Coordinator/Admin
+//? Get all classes from classes base for Coordinator/Admin - Limit 10,000
 app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
   let formattedClasses = [];
   // Getting today's date & time for comparision
@@ -197,7 +183,7 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
   base("Classes")
     .select({
       // Selecting the first 300 records in Grid view:
-      maxRecords: 500,
+      maxRecords: 10000,
       view: "All Classes",
       fields: [
         "Class Name",
@@ -233,18 +219,6 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
           // Checking if the student is included for the class
 
           const momentdate = moment(singleClass.get("Class Time")).format("Do MMMM YY, h:mm a");
-
-          console.log(
-            singleClass.get("Class Name")
-            // singleClass.get("Course")[0]
-            // singleClass.get("Class Completed")
-            // singleClass.get("Students")
-            // singleClass.get("Class Time"),
-            // singleClass.get("Topics")
-            // momentdate
-            // classStatus
-            // studentsAttended
-          );
 
           // Marking class status for the student based on attendance marked
           if (singleClass.get("Class Completed")) {
@@ -296,8 +270,6 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
         fetchNextPage();
       },
       function done(err) {
-        console.log("Done.");
-
         // Getting all the upcoming classes
         const upcomingClasses = formattedClasses.filter((eachClass) => {
           return eachClass.classStatus == "Upcoming";
@@ -363,8 +335,6 @@ app.get("/api/v1/topics/student/:studentCourse", (req, res) => {
 
     const completedTopics = record.get("Completed Topic IDs");
 
-    console.log("Topics are", completedTopics);
-
     // Send all formatted topics as response
     res.status(200).json({
       success: true,
@@ -374,7 +344,7 @@ app.get("/api/v1/topics/student/:studentCourse", (req, res) => {
   });
 });
 
-//? Get all Homework for a particular Student from Homework base
+//? Get all Homework for a particular Student from Homework base - Limit 100
 app.get("/api/v1/homework/student/:studentID", (req, res) => {
   // Getting today's date & time for comparision
   let homeworkArray = [];
@@ -385,8 +355,8 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
   // Function to mark topics completed as true or false - this is called after all the topics are retrived
   base("Homework")
     .select({
-      // Selecting the first 3000 records in Grid view:
-      maxRecords: 6000,
+      // Selecting the first 100 records in Grid view:
+      maxRecords: 100,
       view: "Grid view",
       fields: [
         "Topic Name",
@@ -404,15 +374,12 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
       function page(records, fetchNextPage) {
         // This function (`page`) will get called for each page of records.
 
-        console.log(records);
-
         records.forEach(function (record) {
           var attachment = record.get(["Homework Files"]);
           if (!attachment) {
             attachment = null;
           }
-          // console.log("url", attachment);
-          // console.log("Attachment", record.get("url"));
+
           let homeworkCompleted = false;
           if (record.get("Completed")) {
             homeworkCompleted = true;
@@ -454,7 +421,7 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
   // Send all formatted topics as response
 });
 
-//? Get all Tests for a particular Student from Student Tests base
+//? Get all Tests for a particular Student from Student Tests base - Limit 100
 app.get("/api/v1/tests/student/:studentID", (req, res) => {
   // Getting today's date & time for comparision
   let testsArray = [];
@@ -465,7 +432,7 @@ app.get("/api/v1/tests/student/:studentID", (req, res) => {
   base("Student Tests")
     .select({
       // Selecting the first 6000 records in Grid view:
-      maxRecords: 10000,
+      maxRecords: 100,
       view: "Grid view",
       fields: [
         "Test Name",
@@ -525,7 +492,7 @@ app.get("/api/v1/tests/student/:studentID", (req, res) => {
   // Send all formatted topics as response
 });
 
-//? Get all classes for a particular teacher from classes base
+//? Get all classes for a particular teacher from classes base - Limit 2000
 app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
   let formattedClasses = [];
   // Getting today's date & time for comparision
@@ -538,7 +505,7 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
   base("Classes")
     .select({
       // Selecting the first 300 records in Grid view:
-      maxRecords: 300,
+      maxRecords: 2000,
       view: "All Classes",
       fields: [
         "Class Name",
@@ -570,16 +537,6 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
           // Checking if the student is included for the class
 
           const momentdate = moment(singleClass.get("Class Time")).format("Do MMMM YY, h:mm a");
-
-          console.log(
-            singleClass.get("Class Name")
-            // singleClass.get("Class Completed")
-            // singleClass.get("Class Time"),
-            // singleClass.get("Topics")
-            // singleClass.get("Student Names")
-            // momentdate
-            // classStatus
-          );
 
           // Marking class status for the student based on attendance marked
           if (singleClass.get("Class Completed")) {
@@ -618,8 +575,6 @@ app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
         fetchNextPage();
       },
       function done(err) {
-        console.log("Done.");
-
         // Getting all the upcoming classes
         const upcomingClasses = formattedClasses.filter((eachClass) => {
           return eachClass.classStatus == "Upcoming";
@@ -701,12 +656,10 @@ app.get("/api/v1/class/:classID", (req, res) => {
       zoomLink: record.fields["Zoom Link"],
       zoomRecording: record.fields["Zoom Recording"],
     });
-
-    // console.log("Retrieved", record);
   });
 });
 
-//? Get all students from the students database for Admin
+//? Get all students from the students database for Admin - Limit 1000
 app.get("/api/v1/admin/students", (req, res) => {
   let allStudents = [];
 
@@ -802,7 +755,6 @@ app.get("/api/v1/admin/students", (req, res) => {
             studentID: record.get("StudentID"),
             courseID: record.get("CourseID") ? record.get("CourseID")[0] : "",
           };
-          console.log("Retrieved", record.get("Name"));
 
           allStudents.push(singleStudent);
         });
@@ -827,14 +779,14 @@ app.get("/api/v1/admin/students", (req, res) => {
     );
 });
 
-//? Get all students from the students database for Coordinator and Admin
+//? Get all students from the students database for Coordinator and Admin - Limit 1000
 app.get("/api/v1/coordinatorAdmin/students/:airtableIdOrRole", (req, res) => {
   let allStudents = [];
 
   base("Students")
     .select({
       // Selecting the first 3 records in Grid view:
-      maxRecords: 400,
+      maxRecords: 1000,
       view: "Grid view",
       fields: [
         "Name",
@@ -925,7 +877,6 @@ app.get("/api/v1/coordinatorAdmin/students/:airtableIdOrRole", (req, res) => {
             studentID: record.get("StudentID"),
             courseID: record.get("CourseID") ? record.get("CourseID")[0] : "",
           };
-          console.log("Retrieved", record.get("Name"));
 
           allStudents.push(singleStudent);
         };
@@ -988,7 +939,7 @@ app.get("/api/v1/admin/student/:studentID", (req, res) => {
   });
 });
 
-//? Get dashboard statistics for Admin
+//? Get dashboard statistics for Admin -  Limit 10,000 classes & 1000 Students
 app.get("/api/v1/coordinatorAdmin/dashboard/:airtableIdOrRole", (req, res) => {
   let totalStudents = 0;
   let upcomingClasses = 0;
@@ -998,7 +949,7 @@ app.get("/api/v1/coordinatorAdmin/dashboard/:airtableIdOrRole", (req, res) => {
     base("Classes")
       .select({
         // Selecting the first 3 records in Grid view:
-        maxRecords: 1000,
+        maxRecords: 10000,
         view: "All Classes",
         fields: ["Class Time", "Class Completed", "Coordinator"],
       })
@@ -1068,9 +1019,6 @@ app.get("/api/v1/coordinatorAdmin/dashboard/:airtableIdOrRole", (req, res) => {
             });
           }
 
-          records.forEach((record, index) => {
-            console.log(index, record.get("Name"));
-          });
           fetchNextPage();
         },
         function done(err) {
@@ -1104,7 +1052,6 @@ app.get("/api/v1/student/dashboard/:studentID", (req, res) => {
       console.error(err);
       return;
     }
-    // console.log("Retrieved", record.fields);
 
     // Logic for classes stats
     const classesDone = record.get("Classes Completed");
@@ -1232,7 +1179,6 @@ app.get("/api/v1/student/dashboard-v2/:studentCourse", (req, res) => {
       console.error(err);
       return;
     }
-    // console.log("Retrieved", record.fields);
 
     // Logic for classes stats
     const classesDone = record.get("Classes Completed");
@@ -1435,8 +1381,7 @@ app.get("/api/v1/student/dashboard-v2/:studentCourse", (req, res) => {
           if (!attachment) {
             attachment = null;
           }
-          // console.log("url", attachment);
-          // console.log("Attachment", record.get("url"));
+
           let homeworkCompleted = false;
           if (record.get("Completed")) {
             homeworkCompleted = true;
