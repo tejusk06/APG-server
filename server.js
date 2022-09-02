@@ -166,6 +166,7 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
         });
         if (err) {
           console.error(err);
+
           return;
         }
       }
@@ -184,7 +185,7 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
 
   base("Classes")
     .select({
-      // Selecting the first 300 records in Grid view:
+      // Selecting the first 10000 records in Grid view:
       maxRecords: 10000,
       view: "All Classes",
       fields: [
