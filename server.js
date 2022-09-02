@@ -177,8 +177,10 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
   let formattedClasses = [];
   // Getting today's date & time for comparision
   const today = new Date();
-  let newTime = today.toDateString();
-  let momentToday = moment(newTime);
+  today.setHours(0);
+  today.setMinutes(0);
+  today.setSeconds(0);
+  let momentToday = moment(today);
 
   base("Classes")
     .select({
@@ -212,7 +214,10 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
         const formatClass = (singleClass) => {
           let classStatus = null;
 
-          let classTime = new Date(singleClass.get("Class Time")).toDateString();
+          let classTime = new Date(singleClass.get("Class Time"));
+          classTime.setHours(0);
+          classTime.setMinutes(0);
+          classTime.setSeconds(0);
           let momentClassTime = moment(classTime);
           let daysFromToday = momentClassTime.diff(momentToday, "days");
 
@@ -939,11 +944,19 @@ app.get("/api/v1/admin/student/:studentID", (req, res) => {
   });
 });
 
-//? Get dashboard statistics for Admin -  Limit 10,000 classes & 1000 Students
+//? Get dashboard statistics for Coordinator & Admin -  Limit 10,000 classes & 1000 Students
 app.get("/api/v1/coordinatorAdmin/dashboard/:airtableIdOrRole", (req, res) => {
   let totalStudents = 0;
   let upcomingClasses = 0;
+  let missedClasses = 0;
   let completedClasses = 0;
+
+  const today = new Date();
+  today.setHours(0);
+  today.setMinutes(0);
+  today.setSeconds(0);
+  // let newTime = today.toDateString();
+  let momentToday = moment(today);
 
   const getClasses = () => {
     base("Classes")
@@ -958,10 +971,19 @@ app.get("/api/v1/coordinatorAdmin/dashboard/:airtableIdOrRole", (req, res) => {
           // This function (`page`) will get called for each page of records.
 
           const incrementClassCount = (record) => {
+            let classTime = new Date(record.get("Class Time"));
+            classTime.setHours(0);
+            classTime.setMinutes(0);
+            classTime.setSeconds(0);
+            let momentClassTime = moment(classTime);
+            let daysFromToday = momentClassTime.diff(momentToday, "days");
+
             if (record.get("Class Completed")) {
               completedClasses++;
-            } else {
+            } else if (daysFromToday >= 0) {
               upcomingClasses++;
+            } else if (daysFromToday < 0) {
+              missedClasses++;
             }
           };
 
@@ -991,6 +1013,7 @@ app.get("/api/v1/coordinatorAdmin/dashboard/:airtableIdOrRole", (req, res) => {
               totalStudents,
               upcomingClasses,
               completedClasses,
+              missedClasses,
             },
           });
           return;
