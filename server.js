@@ -267,6 +267,7 @@ app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
             }
           }
         });
+
         /*
          To fetch the next page of classes, call `fetchNextPage`.
          If there are more classes, `page` will get called again.
@@ -373,6 +374,8 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
         "HomeworkID",
         "Course Section",
         "Course Section Homework Name",
+        "Homework Assigned",
+        "Homework Completed",
       ],
       filterByFormula: `({StudentID} = '${studentID}')`,
     })
@@ -396,6 +399,8 @@ app.get("/api/v1/homework/student/:studentID", (req, res) => {
             topicId: record.get("TopicID") ? record.get("TopicID")[0] : "",
             homeworkId: record.get("HomeworkID"),
             date: record.get("Due Date"),
+            assignedDate: record.get("Homework Assigned"),
+            completedDate: record.get("Homework Completed"),
             completed: homeworkCompleted,
             attachment: attachment ? attachment[0].url : attachment,
             momentDate: moment(record.get("Due Date")).format("Do MMM"),
