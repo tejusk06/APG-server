@@ -35,8 +35,8 @@ app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
   // Getting today's date & time for comparision
   const today = new Date();
 
-  const studentID = req.params.studentCourse.split("-")[0];
-  const courseID = req.params.studentCourse.split("-")[1];
+  const studentID = req.params.studentCourse ? req.params.studentCourse.split("-")[0] : "";
+  const courseID = req.params.studentCourse ? req.params.studentCourse.split("-")[1] : "";
 
   base("Classes")
     .select({
@@ -330,8 +330,8 @@ app.get("/api/v1/topics/student/:studentCourse", (req, res) => {
   // Getting today's date & time for comparision
   const today = new Date();
 
-  const studentID = req.params.studentCourse.split("-")[0];
-  const courseID = req.params.studentCourse.split("-")[1];
+  const studentID = req.params.studentCourse ? req.params.studentCourse.split("-")[0] : "";
+  const courseID = req.params.studentCourse ? req.params.studentCourse.split("-")[1] : "";
 
   // Function to mark topics completed as true or false - this is called after all the topics are retrived
   base("Students").find(`${studentID}`, function (err, record) {
@@ -930,7 +930,11 @@ app.get("/api/v1/admin/student/:studentID", (req, res) => {
 
   base("Students").find(`${studentID}`, function (err, record) {
     if (err) {
-      console.error(err);
+      console.error("error is", err);
+      res.status(200).json({
+        error: err,
+      });
+
       return;
     }
 
@@ -943,8 +947,10 @@ app.get("/api/v1/admin/student/:studentID", (req, res) => {
         image: record.get("Student Image") ? record.get("Student Image")[0].url : null,
         id: record.get("StudentID"),
         courseID: record.get("CourseID") ? record.get("CourseID")[0] : "",
-        completedTopics: record.get("Topics Completed Names").split(","),
-        completedTopicsSections: record.get("Topics Completed Sections").split(","),
+        completedTopics: record.get("Topics Completed Names") ? record.get("Topics Completed Names").split(",") : [],
+        completedTopicsSections: record.get("Topics Completed Sections")
+          ? record.get("Topics Completed Sections").split(",")
+          : [],
       },
     });
   });
@@ -1157,8 +1163,8 @@ app.get("/api/v1/student/dashboard/:studentID", (req, res) => {
 
 //? Get dashboard statistics for Student V2
 app.get("/api/v1/student/dashboard-v2/:studentCourse", (req, res) => {
-  const studentID = req.params.studentCourse.split("-")[0];
-  const courseID = req.params.studentCourse.split("-")[1];
+  const studentID = req.params.studentCourse ? req.params.studentCourse.split("-")[0] : "";
+  const courseID = req.params.studentCourse ? req.params.studentCourse.split("-")[1] : "";
 
   let formattedClasses = [];
   // Getting today's date & time for comparision
