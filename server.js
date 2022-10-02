@@ -929,30 +929,38 @@ app.get("/api/v1/admin/student/:studentID", (req, res) => {
   const studentID = req.params.studentID;
 
   base("Students").find(`${studentID}`, function (err, record) {
-    if (err) {
-      console.error("error is", err);
+    try {
+      if (err) {
+        console.error("error is", err);
+        res.status(200).json({
+          error: err,
+        });
+
+        return;
+      }
+
       res.status(200).json({
-        error: err,
+        success: true,
+        msg: `This gets the student details`,
+        student: {
+          name: record.get("Name"),
+          email: record.get("Email Id"),
+          image: record.get("Student Image") ? record.get("Student Image")[0].url : null,
+          id: record.get("StudentID"),
+          courseID: record.get("CourseID") ? record.get("CourseID")[0] : "",
+          completedTopics: record.get("Topics Completed Names") ? record.get("Topics Completed Names").split(",") : [],
+          // completedTopicsSections: record.get("Topics Completed Sections")?.split(",") ?? [],
+          completedTopicsSections: record.get("Topics Completed Sections").split(","),
+        },
       });
+    } catch (error) {
+      console.log("error is", error);
 
-      return;
+      res.status(500).json({
+        success: false,
+        error: `${error}`,
+      });
     }
-
-    res.status(200).json({
-      success: true,
-      msg: `This gets the student details`,
-      student: {
-        name: record.get("Name"),
-        email: record.get("Email Id"),
-        image: record.get("Student Image") ? record.get("Student Image")[0].url : null,
-        id: record.get("StudentID"),
-        courseID: record.get("CourseID") ? record.get("CourseID")[0] : "",
-        completedTopics: record.get("Topics Completed Names") ? record.get("Topics Completed Names").split(",") : [],
-        completedTopicsSections: record.get("Topics Completed Sections")
-          ? record.get("Topics Completed Sections").split(",")
-          : [],
-      },
-    });
   });
 });
 
