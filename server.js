@@ -5,12 +5,39 @@ var cors = require("cors");
 const _ = require("lodash");
 const { type } = require("express/lib/response");
 
+// Route Files
+const studentClasses = require("./routes/studentClasses.js");
+const coordinatorAdminClasses = require("./routes/coordinatorAdminClasses.js");
+const studentTopics = require("./routes/studentTopics.js");
+const studentHomework = require("./routes/studentHomework");
+const studentTests = require("./routes/studentTests");
+const teacherClasses = require("./routes/teacherClasses");
+const individualClass = require("./routes/individualClass");
+const coordinatorAdminStudents = require("./routes/coordinatorAdminStudents");
+const individualStudent = require("./routes/individualStudent");
+const coordinatorAdminDashboard = require("./routes/coordinatorAdminDashboard");
+const studentDashboard = require("./routes/studentDashboard");
+
 // Load env variables
 dotenv.config({ path: "./config/config.env" });
 
 const app = express();
 app.use(cors());
 
+// Mount routers
+app.use("/api/v1/classes/student", studentClasses);
+app.use("/api/v1/coordinatorAdmin/classes", coordinatorAdminClasses);
+app.use("/api/v1/topics/student", studentTopics);
+app.use("/api/v1/homework/student", studentHomework);
+app.use("/api/v1/tests/student", studentTests);
+app.use("/api/v1/classes/teacher", teacherClasses);
+app.use("/api/v1/class", individualClass);
+app.use("/api/v1/coordinatorAdmin/students", coordinatorAdminStudents);
+app.use("/api/v1/admin/student", individualStudent);
+app.use("/api/v1/coordinatorAdmin/dashboard", coordinatorAdminDashboard);
+app.use("/api/v1/student/dashboard-v2", studentDashboard);
+
+// Creating the base for Airtable API Calls
 const base = require("airtable").base("appvnq3LlzxDIHTqI");
 
 //   Function to check if date in past
@@ -29,1534 +56,219 @@ Date.prototype.addDays = function (days) {
   return date;
 };
 
-//? Get all classes for a particular Student from classes base - Limit 100
-app.get("/api/v1/classes/student/:studentCourse", (req, res) => {
-  let formattedClasses = [];
-  // Getting today's date & time for comparision
-  const today = new Date();
-
-  const studentID = req.params.studentCourse ? req.params.studentCourse.split("-")[0] : "";
-  const courseID = req.params.studentCourse ? req.params.studentCourse.split("-")[1] : "";
-
-  base("Classes")
-    .select({
-      // Selecting the first 500 records in Grid view:
-      maxRecords: 100,
-      view: "All Classes",
-      fields: [
-        "Class Name",
-        "CourseID",
-        "Teacher Name",
-        "Class Time",
-        "Topics",
-        "Students",
-        "Students Attended",
-        "Class Completed",
-        "ClassID",
-        "Zoom Link",
-        "Zoom Recording",
-        "Location",
-        "Notes",
-      ],
-
-      filterByFormula: `({CourseID} = '${courseID}')`,
-    })
-    .eachPage(
-      function page(allClasses, fetchNextPage) {
-        // This function (`page`) will get called for each page of allClasses.
-        // TODO Uncomment
-
-        allClasses.forEach(function (singleClass) {
-          let students = singleClass.get("Students");
-          let studentsAttended = singleClass.get("Students Attended");
-          let classStatus = null;
-
-          // Checking is the class has any assigned students?
-
-          // Checking if the student is included for the class
-          if (students && students.includes(studentID)) {
-            // Marking class status for the student based on attendance marked
-
-            if (singleClass.get("Class Completed")) {
-              // Checking if any students attendance has been marked
-              if (studentsAttended) {
-                if (studentsAttended.includes(studentID)) {
-                  classStatus = "Completed";
-                } else {
-                  classStatus = "Missed";
-                }
-              } else {
-                // Setting status as missed if no students attended
-                classStatus = "Missed";
-              }
-            } else {
-              classStatus = "Upcoming";
-            }
-
-            const momentdate = moment(singleClass.get("Class Time")).add(330, "minutes").format("Do MMMM, h:mm a");
-
-            const formattedSingleClass = {
-              className: singleClass.get("Class Name"),
-              teacherName: singleClass.get("Teacher Name"),
-              classTime: singleClass.get("Class Time"),
-              formattedTime: momentdate,
-              classTopics: singleClass.get("Topics"),
-              classID: singleClass.get("ClassID"),
-              zoomLink: singleClass.get("Zoom Link"),
-              zoomRecording: singleClass.get("Zoom Recording"),
-              classStatus,
-              location: singleClass.get("Location"),
-              notes: singleClass.get("Notes"),
-            };
-
-            formattedClasses.push(formattedSingleClass);
-          }
-        });
-
-        /*
-         To fetch the next page of classes, call `fetchNextPage`.
-         If there are more classes, `page` will get called again.
-         If there are no more classes, `done` will get called.
-  */
-
-        fetchNextPage();
-      },
-      function done(err) {
-        // Getting all the upcoming classes
-        const upcomingClasses = formattedClasses.filter((eachClass) => {
-          return eachClass.classStatus == "Upcoming";
-        });
-
-        // Sorting Upcoming classes in ascending order
-        upcomingClasses.sort((d1, d2) => new Date(d1.formattedTime).getTime() - new Date(d2.formattedTime).getTime());
-
-        const completedClasses = formattedClasses.filter((eachClass) => {
-          return eachClass.classStatus == "Completed";
-        });
-
-        // Sorting Completed classes in decending order
-        completedClasses.sort((d1, d2) => new Date(d1.formattedTime).getTime() - new Date(d2.formattedTime).getTime())
-          .reverse;
-
-        // Getting all the missed classes
-        const missedClasses = formattedClasses.filter((eachClass) => {
-          return eachClass.classStatus == "Missed";
-        });
-
-        // Sorting Missed classes in decending order
-        missedClasses.sort((d1, d2) => new Date(d1.formattedTime).getTime() - new Date(d2.formattedTime).getTime())
-          .reverse;
-
-        // Getting all the unknown classes
-        const unknownClasses = formattedClasses.filter((eachClass) => {
-          return eachClass.classStatus == "Unknown";
-        });
-
-        // Sorting Unknown classes in decending order
-        unknownClasses.sort((d1, d2) => new Date(d1.formattedTime).getTime() - new Date(d2.formattedTime).getTime())
-          .reverse;
-
-        res.status(200).json({
-          success: true,
-          msg: `This gets all the classes`,
-          upcomingClasses,
-          completedClasses,
-          missedClasses,
-          unknownClasses,
-        });
-        if (err) {
-          console.error(err);
-
-          return;
-        }
-      }
-    );
-});
-
-//? Get all classes from classes base for Coordinator/Admin - Limit 10,000
-app.get("/api/v1/coordinatorAdmin/classes/:airtableIdOrRole", (req, res) => {
-  let formattedClasses = [];
-  // Getting today's date & time for comparision
-  const today = new Date();
-  today.setHours(0);
-  today.setMinutes(0);
-  today.setSeconds(0);
-  let momentToday = moment(today);
-
-  base("Classes")
-    .select({
-      // Selecting the first 10000 records in Grid view:
-      maxRecords: 10000,
-      view: "All Classes",
-      fields: [
-        "Class Name",
-        "CourseID",
-        "Teacher Name",
-        "Class Time",
-        "Topics",
-        "Students",
-        "Students Attended",
-        "Class Completed",
-        "Section",
-        "ClassID",
-        "Course",
-        "Zoom Link",
-        "Zoom Recording",
-        "Location",
-        "Student Names",
-        "Coordinator",
-        "Notes",
-      ],
-    })
-    .eachPage(
-      function page(allClasses, fetchNextPage) {
-        // This function (`page`) will get called for each page of allClasses.
-
-        const formatClass = (singleClass) => {
-          let classStatus = null;
-
-          let classTime = new Date(singleClass.get("Class Time"));
-          classTime.setHours(0);
-          classTime.setMinutes(0);
-          classTime.setSeconds(0);
-          let momentClassTime = moment(classTime);
-          let daysFromToday = momentClassTime.diff(momentToday, "days");
-
-          // Checking if the student is included for the class
-
-          const momentdate = moment(singleClass.get("Class Time")).format("Do MMMM YY, h:mm a");
-
-          // Marking class status for the student based on attendance marked
-          if (singleClass.get("Class Completed")) {
-            // Checking if any students attendance has been marked
-            classStatus = "Completed";
-          } else if (daysFromToday >= 0) {
-            classStatus = "Upcoming";
-          } else if (daysFromToday < 0) {
-            classStatus = "Overdue";
-          }
-
-          const formattedSingleClass = {
-            className: singleClass.get("Class Name"),
-            teacherName: singleClass.get("Teacher Name"),
-            classTime: singleClass.get("Class Time"),
-            formattedTime: momentdate,
-            classTopics: singleClass.get("Topics"),
-            courseSection: singleClass.get("Section") ? singleClass.get("Section") : "",
-            classID: singleClass.get("ClassID"),
-            courseID: singleClass.get("Course") ? singleClass.get("Course")[0] : "",
-            zoomLink: singleClass.get("Zoom Link"),
-            zoomRecording: singleClass.get("Zoom Recording"),
-            classStatus,
-            location: singleClass.get("Location"),
-            students: singleClass.get("Student Names"),
-            notes: singleClass.get("Notes"),
-            daysFromToday: daysFromToday,
-          };
-
-          formattedClasses.push(formattedSingleClass);
-        };
-
-        allClasses.forEach(function (singleClass) {
-          if (req.params.airtableIdOrRole == "admin") {
-            formatClass(singleClass);
-          } else if (singleClass.get("Coordinator")) {
-            // if coordinator is requesting return only students assigned to him/her
-            if (singleClass.get("Coordinator").includes(req.params.airtableIdOrRole)) {
-              formatClass(singleClass);
-            }
-          }
-        });
-
-        /*
-         To fetch the next page of classes, call `fetchNextPage`.
-         If there are more classes, `page` will get called again.
-         If there are no more classes, `done` will get called.
-  */
-
-        fetchNextPage();
-      },
-      function done(err) {
-        // Getting all the upcoming classes
-        const upcomingClasses = formattedClasses.filter((eachClass) => {
-          return eachClass.classStatus == "Upcoming";
-        });
-
-        const upcomingSorted = upcomingClasses.sort(function compare(a, b) {
-          var dateA = new Date(a.classTime);
-          var dateB = new Date(b.classTime);
-          return dateA - dateB;
-        });
-
-        // Getting all the Missed classes
-        const overdueClasses = formattedClasses.filter((eachClass) => {
-          return eachClass.classStatus == "Overdue";
-        });
-
-        const overdueSorted = overdueClasses.sort(function compare(a, b) {
-          var dateA = new Date(a.classTime);
-          var dateB = new Date(b.classTime);
-          return dateA - dateB;
-        });
-
-        const completedClasses = formattedClasses.filter((eachClass) => {
-          return eachClass.classStatus == "Completed";
-        });
-
-        const completedSorted = completedClasses.sort(function compare(a, b) {
-          var dateA = new Date(a.classTime);
-          var dateB = new Date(b.classTime);
-          return dateB - dateA;
-        });
-
-        res.status(200).json({
-          success: true,
-          msg: `This gets all the classes for the admin`,
-          // formattedClasses,
-          upcomingClasses: upcomingSorted,
-          completedClasses: completedSorted,
-          overdueClasses: overdueSorted,
-        });
-        if (err) {
-          console.error(err);
-          return;
-        }
-      }
-    );
-});
-
-//? Get all topics for a particular Student from classes base
-app.get("/api/v1/topics/student/:studentCourse", (req, res) => {
-  // Getting today's date & time for comparision
-  const today = new Date();
-
-  const studentID = req.params.studentCourse ? req.params.studentCourse.split("-")[0] : "";
-  const courseID = req.params.studentCourse ? req.params.studentCourse.split("-")[1] : "";
-
-  // Function to mark topics completed as true or false - this is called after all the topics are retrived
-  base("Students").find(`${studentID}`, function (err, record) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-
-    const completedTopics = record.get("Completed Topic IDs");
-
-    // Send all formatted topics as response
-    res.status(200).json({
-      success: true,
-      msg: `This gets all the topics for a student`,
-      completedTopics: completedTopics ? completedTopics : [],
-    });
-  });
-});
-
-//? Get all Homework for a particular Student from Homework base - Limit 100
-app.get("/api/v1/homework/student/:studentID", (req, res) => {
-  // Getting today's date & time for comparision
-  let homeworkArray = [];
-  const today = new Date();
-
-  const studentID = req.params.studentID;
-
-  // Function to mark topics completed as true or false - this is called after all the topics are retrived
-  base("Homework")
-    .select({
-      // Selecting the first 100 records in Grid view:
-      maxRecords: 100,
-      view: "Grid view",
-      fields: [
-        "Topic Name",
-        "Due Date",
-        "Completed",
-        "Homework Files",
-        "TopicID",
-        "HomeworkID",
-        "Course Section",
-        "Course Section Homework Name",
-        "Homework Assigned",
-        "Homework Completed",
-      ],
-      filterByFormula: `({StudentID} = '${studentID}')`,
-    })
-    .eachPage(
-      function page(records, fetchNextPage) {
-        // This function (`page`) will get called for each page of records.
-
-        records.forEach(function (record) {
-          var attachment = record.get(["Homework Files"]);
-          if (!attachment) {
-            attachment = null;
-          }
-
-          let homeworkCompleted = false;
-          if (record.get("Completed")) {
-            homeworkCompleted = true;
-          }
-
-          let homeworkItem = {
-            name: record.get("Topic Name") ? record.get("Topic Name")[0] : "",
-            topicId: record.get("TopicID") ? record.get("TopicID")[0] : "",
-            homeworkId: record.get("HomeworkID"),
-            date: record.get("Due Date"),
-            assignedDate: moment(record.get("Homework Assigned")).format("Do MMM"),
-            completedDate: moment(record.get("Homework Completed")).format("Do MMM"),
-            completed: homeworkCompleted,
-            attachment: attachment ? attachment[0].url : attachment,
-            momentDate: moment(record.get("Due Date")).format("Do MMM"),
-            courseSection: record.get("Course Section")[0],
-            courseSectionHomeworkName: record.get("Course Section Homework Name"),
-          };
-          homeworkArray.push(homeworkItem);
-        });
-
-        // To fetch the next page of records, call `fetchNextPage`.
-        // If there are more records, `page` will get called again.
-        // If there are no more records, `done` will get called.
-        fetchNextPage();
-      },
-      function done(err) {
-        res.status(200).json({
-          success: true,
-          msg: `This gets all the homework for a student`,
-          homeworkArray,
-        });
-
-        if (err) {
-          console.error(err);
-          return;
-        }
-      }
-    );
-
-  // Send all formatted topics as response
-});
-
-//? Get all Tests for a particular Student from Student Tests base - Limit 100
-app.get("/api/v1/tests/student/:studentID", (req, res) => {
-  // Getting today's date & time for comparision
-  let testsArray = [];
-  const today = new Date();
-
-  const studentID = req.params.studentID;
-
-  base("Student Tests")
-    .select({
-      // Selecting the first 6000 records in Grid view:
-      maxRecords: 100,
-      view: "Grid view",
-      fields: [
-        "Test Name",
-        "Test Due Date",
-        "Test Report",
-        "Status",
-        "Question Paper",
-        "TestID",
-        "Answer Explanation",
-        "Video Explanations",
-      ],
-      filterByFormula: `({StudentID} = '${studentID}')`,
-    })
-    .eachPage(
-      function page(records, fetchNextPage) {
-        // This function (`page`) will get called for each page of records.
-
-        records.forEach(function (record) {
-          let testItem = {
-            name: record.get("Test Name") ? record.get("Test Name")[0] : "",
-            dueDate: record.get("Test Due Date") ? record.get("Test Due Date") : null,
-            momentDate: record.get("Test Due Date") ? moment(record.get("Test Due Date")).format("Do MMM YYYY") : null,
-            report: record.get("Test Report") ? record.get("Test Report")[0].url : null,
-            status: record.get("Status") ? record.get("Status") : false,
-            questionPaper: record.get("Question Paper") ? record.get("Question Paper")[0].url : "",
-            writtenExplanation: record.get("Answer Explanation") ? record.get("Answer Explanation")[0].url : "",
-            videoExplanation: record.get("Video Explanations") ? record.get("Video Explanations")[0] : "",
-            testId: record.get("TestID"),
-          };
-          testsArray.push(testItem);
-        });
-
-        // To fetch the next page of records, call `fetchNextPage`.
-        // If there are more records, `page` will get called again.
-        // If there are no more records, `done` will get called.
-        fetchNextPage();
-      },
-      function done(err) {
-        // Sorting the allClasses in decending order
-        testsArray = _.sortBy(testsArray, function (singleTest) {
-          return singleTest.name;
-        });
-
-        res.status(200).json({
-          success: true,
-          msg: `This gets all the tests for a student`,
-          testsArray,
-        });
-
-        if (err) {
-          console.error(err);
-          return;
-        }
-      }
-    );
-
-  // Send all formatted topics as response
-});
-
-//? Get all classes for a particular teacher from classes base - Limit 2000
-app.get("/api/v1/classes/teacher/:teacherID", (req, res) => {
-  let formattedClasses = [];
-  // Getting today's date & time for comparision
-  const today = new Date();
-  let newTime = today.toDateString();
-  let momentToday = moment(newTime);
-
-  const teacherID = req.params.teacherID;
-
-  base("Classes")
-    .select({
-      // Selecting the first 300 records in Grid view:
-      maxRecords: 2000,
-      view: "All Classes",
-      fields: [
-        "Class Name",
-        "ClassID",
-        "Teacher Name",
-        "TeacherID",
-        "Class Time",
-        "Topics",
-        "Class Completed",
-        "Zoom Link",
-        "Zoom Recording",
-        "Location",
-        "Student Names",
-        "Notes",
-      ],
-      filterByFormula: `({TeacherID} = '${teacherID}')`,
-    })
-    .eachPage(
-      function page(allClasses, fetchNextPage) {
-        // This function (`page`) will get called for each page of allClasses.
-
-        allClasses.forEach(function (singleClass) {
-          let classStatus = null;
-
-          let classTime = new Date(singleClass.get("Class Time")).toDateString();
-          let momentClassTime = moment(classTime);
-          let daysFromToday = momentClassTime.diff(momentToday, "days");
-
-          // Checking if the student is included for the class
-
-          const momentdate = moment(singleClass.get("Class Time")).format("Do MMMM YY, h:mm a");
-
-          // Marking class status for the student based on attendance marked
-          if (singleClass.get("Class Completed")) {
-            // Checking if any students attendance has been marked
-            classStatus = "Completed";
-          } else if (daysFromToday >= 0) {
-            classStatus = "Upcoming";
-          } else if (daysFromToday < 0) {
-            classStatus = "Overdue";
-          }
-
-          const formattedSingleClass = {
-            className: singleClass.get("Class Name"),
-            teacherName: singleClass.get("Teacher Name"),
-            classTime: singleClass.get("Class Time"),
-            formattedTime: momentdate,
-            classTopics: singleClass.get("Topics"),
-            classID: singleClass.get("ClassID"),
-            zoomLink: singleClass.get("Zoom Link"),
-            zoomRecording: singleClass.get("Zoom Recording"),
-            classStatus,
-            location: singleClass.get("Location"),
-            students: singleClass.get("Student Names"),
-            notes: singleClass.get("Notes"),
-            daysFromToday: daysFromToday,
-          };
-
-          formattedClasses.push(formattedSingleClass);
-        });
-        /*
-         To fetch the next page of classes, call `fetchNextPage`.
-         If there are more classes, `page` will get called again.
-         If there are no more classes, `done` will get called.
-  */
-
-        fetchNextPage();
-      },
-      function done(err) {
-        // Getting all the upcoming classes
-        const upcomingClasses = formattedClasses.filter((eachClass) => {
-          return eachClass.classStatus == "Upcoming";
-        });
-
-        const upcomingSorted = upcomingClasses.sort(function compare(a, b) {
-          var dateA = new Date(a.classTime);
-          var dateB = new Date(b.classTime);
-          return dateA - dateB;
-        });
-
-        // Getting all the Missed classes
-        const overdueClasses = formattedClasses.filter((eachClass) => {
-          return eachClass.classStatus == "Overdue";
-        });
-
-        const overdueSorted = overdueClasses.sort(function compare(a, b) {
-          var dateA = new Date(a.classTime);
-          var dateB = new Date(b.classTime);
-          return dateA - dateB;
-        });
-
-        const completedClasses = formattedClasses.filter((eachClass) => {
-          return eachClass.classStatus == "Completed";
-        });
-
-        const completedSorted = completedClasses.sort(function compare(a, b) {
-          var dateA = new Date(a.classTime);
-          var dateB = new Date(b.classTime);
-          return dateB - dateA;
-        });
-
-        // Getting all the unknown classes
-        const unknownClasses = formattedClasses.filter((eachClass) => {
-          return eachClass.classStatus == "Unknown";
-        });
-
-        // Sorting Unknown classes in decending order
-        unknownClasses.sort((d1, d2) => new Date(d1.formattedTime).getTime() - new Date(d2.formattedTime).getTime())
-          .reverse;
-
-        res.status(200).json({
-          success: true,
-          msg: `This gets all the classes`,
-          // formattedClasses,
-          upcomingClasses: upcomingSorted,
-          completedClasses: completedSorted,
-          overdueClasses: overdueSorted,
-          unknownClasses,
-        });
-        if (err) {
-          console.error(err);
-          return;
-        }
-      }
-    );
-});
-
-//? Get individual class from classes base for both teacher and admin
-app.get("/api/v1/class/:classID", (req, res) => {
-  const classID = req.params.classID;
-  // Getting today's date & time for comparision
-
-  base("Classes").find(`${classID}`, function (err, record) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-
-    res.status(200).json({
-      success: true,
-      msg: `This gets the individual class`,
-      // class: record,
-      className: record.fields["Class Name"],
-      classLocation: record.fields["Location"],
-      teacherName: record.fields["Teacher Name"],
-      topicsCompleted: record.fields["Topic Completed"],
-      momentDate: moment(record.fields["Class Time"]).add(330, "minutes").format("Do MMMM, h:mm a"),
-      zoomLink: record.fields["Zoom Link"],
-      zoomRecording: record.fields["Zoom Recording"],
-    });
-  });
-});
-
 //? Get all students from the students database for Admin - Limit 1000
-app.get("/api/v1/admin/students", (req, res) => {
-  let allStudents = [];
+// TODO this api call is not being used
+// app.get("/api/v1/admin/students", (req, res) => {
+//   let allStudents = [];
 
-  base("Students")
-    .select({
-      // Selecting the first 3 records in Grid view:
-      maxRecords: 1000,
-      view: "Grid view",
-      fields: [
-        "Name",
-        "Location",
-        "Student Image",
-        "Total Classes",
-        "Classes Attended",
-        "Total Tests",
-        "Test Due Dates",
-        "Total Homework",
-        "Homework Completed",
-        "Homework Due Date",
-        "Total Topics Completed",
-        "StudentID",
-        "CourseID",
-        "Test Status",
-      ],
-    })
-    .eachPage(
-      function page(records, fetchNextPage) {
-        // This function (`page`) will get called for each page of records.
+//   base("Students")
+//     .select({
+//       // Selecting the first 3 records in Grid view:
+//       maxRecords: 1000,
+//       view: "Grid view",
+//       fields: [
+//         "Name",
+//         "Location",
+//         "Student Image",
+//         "Total Classes",
+//         "Classes Attended",
+//         "Total Tests",
+//         "Test Due Dates",
+//         "Total Homework",
+//         "Homework Completed",
+//         "Homework Due Date",
+//         "Total Topics Completed",
+//         "StudentID",
+//         "CourseID",
+//         "Test Status",
+//       ],
+//     })
+//     .eachPage(
+//       function page(records, fetchNextPage) {
+//         // This function (`page`) will get called for each page of records.
 
-        records.forEach(function (record) {
-          let testsCompleted = 0;
-          let testsUpcoming = 0;
+//         records.forEach(function (record) {
+//           let testsCompleted = 0;
+//           let testsUpcoming = 0;
 
-          let homeworkCompleted = 0;
-          let homeworkPending = 0;
+//           let homeworkCompleted = 0;
+//           let homeworkPending = 0;
 
-          let classesAttended = 0;
+//           let classesAttended = 0;
 
-          const testsDatesArray = record.get("Test Due Dates");
+//           const testsDatesArray = record.get("Test Due Dates");
 
-          if (record.get("Test Status")) {
-            const testStatusArray = record.get("Test Status").split(",");
-            for (let i = 0; i < testsDatesArray.length; i++) {
-              if (testStatusArray[i]) {
-                testsCompleted++;
-              } else {
-                const testDate = testsDatesArray[i];
-                const isPast = dateInPast(new Date(testDate).addDays(1));
-                if (!isPast) {
-                  testsUpcoming++;
-                }
-              }
-            }
-          }
+//           if (record.get("Test Status")) {
+//             const testStatusArray = record.get("Test Status").split(",");
+//             for (let i = 0; i < testsDatesArray.length; i++) {
+//               if (testStatusArray[i]) {
+//                 testsCompleted++;
+//               } else {
+//                 const testDate = testsDatesArray[i];
+//                 const isPast = dateInPast(new Date(testDate).addDays(1));
+//                 if (!isPast) {
+//                   testsUpcoming++;
+//                 }
+//               }
+//             }
+//           }
 
-          // Logic for homework Stats
+//           // Logic for homework Stats
 
-          const homeworkStatusArray = record.get("Homework Completed")
-            ? record.get("Homework Completed").split(",")
-            : [];
-          const homeworkDatesArray = record.get("Homework Due Date") ? record.get("Homework Due Date") : [];
+//           const homeworkStatusArray = record.get("Homework Completed")
+//             ? record.get("Homework Completed").split(",")
+//             : [];
+//           const homeworkDatesArray = record.get("Homework Due Date") ? record.get("Homework Due Date") : [];
 
-          for (let i = 0; i < homeworkDatesArray.length; i++) {
-            if (homeworkStatusArray[i]) {
-              homeworkCompleted++;
-            } else {
-              const homeworkDate = homeworkDatesArray[i];
-              const isPast = dateInPast(new Date(homeworkDate).addDays(1));
+//           for (let i = 0; i < homeworkDatesArray.length; i++) {
+//             if (homeworkStatusArray[i]) {
+//               homeworkCompleted++;
+//             } else {
+//               const homeworkDate = homeworkDatesArray[i];
+//               const isPast = dateInPast(new Date(homeworkDate).addDays(1));
 
-              if (!isPast) {
-                homeworkPending++;
-              }
-            }
-          }
+//               if (!isPast) {
+//                 homeworkPending++;
+//               }
+//             }
+//           }
 
-          if (record.get("Classes Attended")) {
-            classesAttended = record.get("Classes Attended").length;
-          }
+//           if (record.get("Classes Attended")) {
+//             classesAttended = record.get("Classes Attended").length;
+//           }
 
-          let singleStudent = {
-            name: record.get("Name"),
-            location: record.get("Location"),
-            image: record.get("Student Image") ? record.get("Student Image")[0].url : null,
-            classes: record.get("Total Classes"),
-            classesAttended: classesAttended,
-            tests: record.get("Total Tests"),
-            testsCompleted: testsCompleted,
-            testsUpcoming: testsUpcoming,
-            homework: record.get("Total Homework"),
-            homeworkCompleted: homeworkCompleted,
-            homeworkPending: homeworkPending,
-            topics: record.get("Total Topics Completed"),
-            studentID: record.get("StudentID"),
-            courseID: record.get("CourseID") ? record.get("CourseID")[0] : "",
-          };
+//           let singleStudent = {
+//             name: record.get("Name"),
+//             location: record.get("Location"),
+//             image: record.get("Student Image") ? record.get("Student Image")[0].url : null,
+//             classes: record.get("Total Classes"),
+//             classesAttended: classesAttended,
+//             tests: record.get("Total Tests"),
+//             testsCompleted: testsCompleted,
+//             testsUpcoming: testsUpcoming,
+//             homework: record.get("Total Homework"),
+//             homeworkCompleted: homeworkCompleted,
+//             homeworkPending: homeworkPending,
+//             topics: record.get("Total Topics Completed"),
+//             studentID: record.get("StudentID"),
+//             courseID: record.get("CourseID") ? record.get("CourseID")[0] : "",
+//           };
 
-          allStudents.push(singleStudent);
-        });
+//           allStudents.push(singleStudent);
+//         });
 
-        // To fetch the next page of records, call `fetchNextPage`.
-        // If there are more records, `page` will get called again.
-        // If there are no more records, `done` will get called.
-        fetchNextPage();
-      },
-      function done(err) {
-        if (err) {
-          console.error(err);
-          return;
-        }
+//         // To fetch the next page of records, call `fetchNextPage`.
+//         // If there are more records, `page` will get called again.
+//         // If there are no more records, `done` will get called.
+//         fetchNextPage();
+//       },
+//       function done(err) {
+//         if (err) {
+//           console.error(err);
+//           return;
+//         }
 
-        res.status(200).json({
-          success: true,
-          msg: `This gets all the students`,
-          allStudents,
-        });
-      }
-    );
-});
-
-//? Get all students from the students database for Coordinator and Admin - Limit 1000
-app.get("/api/v1/coordinatorAdmin/students/:airtableIdOrRole", (req, res) => {
-  let allStudents = [];
-
-  base("Students")
-    .select({
-      // Selecting the first 3 records in Grid view:
-      maxRecords: 1000,
-      view: "Grid view",
-      fields: [
-        "Name",
-        "Location",
-        "Student Image",
-        "Total Classes",
-        "Classes Attended",
-        "Total Tests",
-        "Test Due Dates",
-        "Total Homework",
-        "Homework Completed",
-        "Homework Due Date",
-        "Total Topics Completed",
-        "StudentID",
-        "CourseID",
-        "Test Status",
-        "Coordinators",
-      ],
-    })
-    .eachPage(
-      function page(records, fetchNextPage) {
-        // This function (`page`) will get called for each page of records.
-
-        // Function to add student to the all students array
-        const addStudent = (record) => {
-          let testsCompleted = 0;
-          let testsUpcoming = 0;
-
-          let homeworkCompleted = 0;
-          let homeworkPending = 0;
-
-          let classesAttended = 0;
-
-          const testsDatesArray = record.get("Test Due Dates");
-
-          if (record.get("Test Status")) {
-            const testStatusArray = record.get("Test Status").split(",");
-            for (let i = 0; i < testsDatesArray.length; i++) {
-              if (testStatusArray[i]) {
-                testsCompleted++;
-              } else {
-                const testDate = testsDatesArray[i];
-                const isPast = dateInPast(new Date(testDate).addDays(1));
-                if (!isPast) {
-                  testsUpcoming++;
-                }
-              }
-            }
-          }
-
-          // Logic for homework Stats
-
-          const homeworkStatusArray = record.get("Homework Completed")
-            ? record.get("Homework Completed").split(",")
-            : [];
-          const homeworkDatesArray = record.get("Homework Due Date") ? record.get("Homework Due Date") : [];
-
-          for (let i = 0; i < homeworkDatesArray.length; i++) {
-            if (homeworkStatusArray[i]) {
-              homeworkCompleted++;
-            } else {
-              const homeworkDate = homeworkDatesArray[i];
-              const isPast = dateInPast(new Date(homeworkDate).addDays(1));
-
-              if (!isPast) {
-                homeworkPending++;
-              }
-            }
-          }
-
-          if (record.get("Classes Attended")) {
-            classesAttended = record.get("Classes Attended").length;
-          }
-
-          let singleStudent = {
-            name: record.get("Name"),
-            location: record.get("Location"),
-            image: record.get("Student Image") ? record.get("Student Image")[0].url : null,
-            classes: record.get("Total Classes"),
-            classesAttended: classesAttended,
-            tests: record.get("Total Tests"),
-            testsCompleted: testsCompleted,
-            testsUpcoming: testsUpcoming,
-            homework: record.get("Total Homework"),
-            homeworkCompleted: homeworkCompleted,
-            homeworkPending: homeworkPending,
-            topics: record.get("Total Topics Completed"),
-            studentID: record.get("StudentID"),
-            courseID: record.get("CourseID") ? record.get("CourseID")[0] : "",
-          };
-
-          allStudents.push(singleStudent);
-        };
-
-        records.forEach(function (record) {
-          // if admin is requesting return all students
-          if (req.params.airtableIdOrRole == "admin") {
-            addStudent(record);
-          } else if (record.get("Coordinators")) {
-            // if coordinator is requesting return only students assigned to him/her
-            if (record.get("Coordinators").includes(req.params.airtableIdOrRole)) {
-              addStudent(record);
-            }
-          }
-        });
-
-        // To fetch the next page of records, call `fetchNextPage`.
-        // If there are more records, `page` will get called again.
-        // If there are no more records, `done` will get called.
-        fetchNextPage();
-      },
-      function done(err) {
-        if (err) {
-          console.error(err);
-          return;
-        }
-
-        res.status(200).json({
-          success: true,
-          msg: `This gets all the students`,
-          allStudents,
-        });
-      }
-    );
-});
-
-//? Get individual student from the students database for Admin
-app.get("/api/v1/admin/student/:studentID", (req, res) => {
-  const studentID = req.params.studentID;
-
-  base("Students").find(`${studentID}`, function (err, record) {
-    try {
-      if (err) {
-        console.error("error is", err);
-        res.status(200).json({
-          error: err,
-        });
-
-        return;
-      }
-
-      res.status(200).json({
-        success: true,
-        msg: `This gets the student details`,
-        student: {
-          name: record.get("Name"),
-          email: record.get("Email Id"),
-          image: record.get("Student Image") ? record.get("Student Image")[0].url : null,
-          id: record.get("StudentID"),
-          courseID: record.get("CourseID") ? record.get("CourseID")[0] : "",
-          completedTopics: record.get("Topics Completed Names") ? record.get("Topics Completed Names").split(",") : [],
-          // completedTopicsSections: record.get("Topics Completed Sections")?.split(",") ?? [],
-          completedTopicsSections: record.get("Topics Completed Sections").split(","),
-        },
-      });
-    } catch (error) {
-      console.log("error is", error);
-
-      res.status(500).json({
-        success: false,
-        error: `${error}`,
-      });
-    }
-  });
-});
-
-//? Get dashboard statistics for Coordinator & Admin -  Limit 10,000 classes & 1000 Students
-app.get("/api/v1/coordinatorAdmin/dashboard/:airtableIdOrRole", (req, res) => {
-  let totalStudents = 0;
-  let upcomingClasses = 0;
-  let missedClasses = 0;
-  let completedClasses = 0;
-
-  const today = new Date();
-  today.setHours(0);
-  today.setMinutes(0);
-  today.setSeconds(0);
-  // let newTime = today.toDateString();
-  let momentToday = moment(today);
-
-  const getClasses = () => {
-    base("Classes")
-      .select({
-        // Selecting the first 3 records in Grid view:
-        maxRecords: 10000,
-        view: "All Classes",
-        fields: ["Class Time", "Class Completed", "Coordinator"],
-      })
-      .eachPage(
-        function page(records, fetchNextPage) {
-          // This function (`page`) will get called for each page of records.
-
-          const incrementClassCount = (record) => {
-            let classTime = new Date(record.get("Class Time"));
-            classTime.setHours(0);
-            classTime.setMinutes(0);
-            classTime.setSeconds(0);
-            let momentClassTime = moment(classTime);
-            let daysFromToday = momentClassTime.diff(momentToday, "days");
-
-            if (record.get("Class Completed")) {
-              completedClasses++;
-            } else if (daysFromToday >= 0) {
-              upcomingClasses++;
-            } else if (daysFromToday < 0) {
-              missedClasses++;
-            }
-          };
-
-          records.forEach(function (record) {
-            if (req.params.airtableIdOrRole == "admin") {
-              incrementClassCount(record);
-            } else if (record.get("Coordinator")) {
-              // if coordinator is requesting return only students assigned to him/her
-              if (record.get("Coordinator").includes(req.params.airtableIdOrRole)) {
-                incrementClassCount(record);
-              }
-            }
-          });
-
-          fetchNextPage();
-        },
-        function done(err) {
-          if (err) {
-            console.error(err);
-            return;
-          }
-
-          res.status(200).json({
-            success: true,
-            msg: `This gets dashboard statistics for the admin`,
-            stats: {
-              totalStudents,
-              upcomingClasses,
-              completedClasses,
-              missedClasses,
-            },
-          });
-          return;
-        }
-      );
-  };
-
-  const getStudents = () => {
-    base("Students")
-      .select({
-        // Selecting the first 500 records in Grid view:
-        maxRecords: 1000,
-        view: "Grid view",
-        fields: ["Name", "Coordinators"],
-      })
-      .eachPage(
-        function page(records, fetchNextPage) {
-          if (req.params.airtableIdOrRole == "admin") {
-            totalStudents = totalStudents + records.length;
-          } else {
-            records.forEach(function (record) {
-              // if coordinator is requesting return only students assigned to him/her
-              if (record.get("Coordinators") && record.get("Coordinators").includes(req.params.airtableIdOrRole)) {
-                totalStudents++;
-              }
-            });
-          }
-
-          fetchNextPage();
-        },
-        function done(err) {
-          if (err) {
-            console.error(err);
-            return;
-          }
-          getClasses();
-        }
-      );
-  };
-
-  getStudents();
-});
+//         res.status(200).json({
+//           success: true,
+//           msg: `This gets all the students`,
+//           allStudents,
+//         });
+//       }
+//     );
+// });
 
 //? Get dashboard statistics for Student
-app.get("/api/v1/student/dashboard/:studentID", (req, res) => {
-  let upcomingClasses = 0;
-  let completedClasses = 0;
-  let allClasses = 0;
-  let allHomework = [];
-  let homeworkPending = 0;
-  let homeworkDue = 0;
-  let homeworkCompleted = 0;
-  let testsUpcoming = 0;
-  let testsMissed = 0;
-  let testsCompleted = 0;
+// TODO this api call is not being used
+// app.get("/api/v1/student/dashboard/:studentID", (req, res) => {
+//   let upcomingClasses = 0;
+//   let completedClasses = 0;
+//   let allClasses = 0;
+//   let allHomework = [];
+//   let homeworkPending = 0;
+//   let homeworkDue = 0;
+//   let homeworkCompleted = 0;
+//   let testsUpcoming = 0;
+//   let testsMissed = 0;
+//   let testsCompleted = 0;
 
-  base("Students").find(req.params.studentID, function (err, record) {
-    if (err) {
-      console.error(err);
-      return;
-    }
+//   base("Students").find(req.params.studentID, function (err, record) {
+//     if (err) {
+//       console.error(err);
+//       return;
+//     }
 
-    // Logic for classes stats
-    const classesDone = record.get("Classes Completed");
-    if (classesDone) {
-      classesDone.forEach((eachClass) => {
-        allClasses++;
-        if (eachClass) {
-          completedClasses++;
-        }
-      });
-    }
+//     // Logic for classes stats
+//     const classesDone = record.get("Classes Completed");
+//     if (classesDone) {
+//       classesDone.forEach((eachClass) => {
+//         allClasses++;
+//         if (eachClass) {
+//           completedClasses++;
+//         }
+//       });
+//     }
 
-    upcomingClasses = allClasses - completedClasses;
+//     upcomingClasses = allClasses - completedClasses;
 
-    // Logic for homework Stats
-    const homeworkStatusArray = record.get("Homework Completed") ? record.get("Homework Completed").split(",") : [];
-    const homeworkDatesArray = record.get("Homework Due Date") ? record.get("Homework Due Date") : [];
+//     // Logic for homework Stats
+//     const homeworkStatusArray = record.get("Homework Completed") ? record.get("Homework Completed").split(",") : [];
+//     const homeworkDatesArray = record.get("Homework Due Date") ? record.get("Homework Due Date") : [];
 
-    for (let i = 0; i < homeworkDatesArray.length; i++) {
-      if (homeworkStatusArray[i]) {
-        homeworkCompleted++;
-      } else {
-        const homeworkDate = homeworkDatesArray[i];
-        const isPast = dateInPast(new Date(homeworkDate).addDays(1));
+//     for (let i = 0; i < homeworkDatesArray.length; i++) {
+//       if (homeworkStatusArray[i]) {
+//         homeworkCompleted++;
+//       } else {
+//         const homeworkDate = homeworkDatesArray[i];
+//         const isPast = dateInPast(new Date(homeworkDate).addDays(1));
 
-        if (isPast) {
-          homeworkDue++;
-        } else {
-          homeworkPending++;
-        }
-      }
-    }
+//         if (isPast) {
+//           homeworkDue++;
+//         } else {
+//           homeworkPending++;
+//         }
+//       }
+//     }
 
-    // Logic for tests stats
-    const testsDatesArray = record.get("Test Due Dates");
-    if (record.get("Test Status")) {
-      const testStatusArray = record.get("Test Status").split(",");
-      for (let i = 0; i < testsDatesArray.length; i++) {
-        if (testStatusArray[i]) {
-          testsCompleted++;
-        } else {
-          const testDate = testsDatesArray[i];
-          const isPast = dateInPast(new Date(testDate).addDays(1));
+//     // Logic for tests stats
+//     const testsDatesArray = record.get("Test Due Dates");
+//     if (record.get("Test Status")) {
+//       const testStatusArray = record.get("Test Status").split(",");
+//       for (let i = 0; i < testsDatesArray.length; i++) {
+//         if (testStatusArray[i]) {
+//           testsCompleted++;
+//         } else {
+//           const testDate = testsDatesArray[i];
+//           const isPast = dateInPast(new Date(testDate).addDays(1));
 
-          if (isPast) {
-            testsMissed++;
-          } else {
-            testsUpcoming++;
-          }
-        }
-      }
-    }
+//           if (isPast) {
+//             testsMissed++;
+//           } else {
+//             testsUpcoming++;
+//           }
+//         }
+//       }
+//     }
 
-    res.status(200).json({
-      success: true,
-      msg: `This gets dashboard statistics for the student`,
-      stats: {
-        upcomingClasses,
-        allClasses,
-        totalTopicsCompleted: record.get("Total Topics Completed"),
-        mathTopicsCompleted: record.get("Sat Math Topics Completed"),
-        readingTopicsCompleted: record.get("Sat Reading Topics Completed"),
-        writingTopicsCompleted: record.get("Sat Writing Topics Completed"),
-        homeworkPending,
-        homeworkDue,
-        homeworkCompleted,
-        testsUpcoming,
-        testsMissed,
-        testsCompleted,
-      },
-    });
-  });
-});
-
-//? Get dashboard statistics for Student V2
-app.get("/api/v1/student/dashboard-v2/:studentCourse", (req, res) => {
-  const studentID = req.params.studentCourse ? req.params.studentCourse.split("-")[0] : "";
-  const courseID = req.params.studentCourse ? req.params.studentCourse.split("-")[1] : "";
-
-  let formattedClasses = [];
-  // Getting today's date & time for comparision
-  const today = new Date();
-
-  // Variables for dashboard statistics
-  let gotDashboardDetails = false;
-  let upcomingClassesCount = 0;
-  let completedClassesCount = 0;
-  let allClasses = 0;
-  let allHomework = [];
-  let homeworkPending = 0;
-  let homeworkDue = 0;
-  let homeworkCompleted = 0;
-  let testsUpcoming = 0;
-  let testsMissed = 0;
-  let testsCompleted = 0;
-  let totalTopicsCompleted = 0;
-  let satMathTopicsCompleted = 0;
-  let satReadingTopicsCompleted = 0;
-  let satWritingTopicsCompleted = 0;
-  let actReadingTopicsCompleted = 0;
-  let actScienceTopicsCompleted = 0;
-  let actEnglishTopicsCompleted = 0;
-
-  // Varibles for student classes
-  let gotClassesDetails = false;
-  let upcomingClasses = [];
-  let completedClasses = [];
-  let missedClasses = [];
-  let unknownClasses = [];
-
-  // Varibles for student topics
-  let completedTopics = [];
-
-  // Variables for student Homework
-  let gotHomeworkDetails = false;
-  let homeworkArray = [];
-
-  // Variable for student tests
-  let gotTestDetails = false;
-  let testsArray = [];
-
-  //? Gets dashboard statistics for the student
-  base("Students").find(studentID, function (err, record) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-
-    // Logic for classes stats
-    const classesDone = record.get("Classes Completed");
-    if (classesDone) {
-      classesDone.forEach((eachClass) => {
-        allClasses++;
-        if (eachClass) {
-          completedClassesCount++;
-        }
-      });
-    }
-
-    upcomingClassesCount = allClasses - completedClassesCount;
-
-    // Logic for homework Stats
-    const homeworkStatusArray = record.get("Homework Completed") ? record.get("Homework Completed").split(",") : [];
-    const homeworkDatesArray = record.get("Homework Due Date") ? record.get("Homework Due Date") : [];
-
-    for (let i = 0; i < homeworkDatesArray.length; i++) {
-      if (homeworkStatusArray[i]) {
-        homeworkCompleted++;
-      } else {
-        const homeworkDate = homeworkDatesArray[i];
-        const isPast = dateInPast(new Date(homeworkDate).addDays(1));
-
-        if (isPast) {
-          homeworkDue++;
-        } else {
-          homeworkPending++;
-        }
-      }
-    }
-
-    // Logic for tests stats
-    const testsDatesArray = record.get("Test Due Dates");
-    if (record.get("Test Status")) {
-      const testStatusArray = record.get("Test Status").split(",");
-      for (let i = 0; i < testsDatesArray.length; i++) {
-        if (testStatusArray[i]) {
-          testsCompleted++;
-        } else {
-          const testDate = testsDatesArray[i];
-          const isPast = dateInPast(new Date(testDate).addDays(1));
-
-          if (isPast) {
-            testsMissed++;
-          } else {
-            testsUpcoming++;
-          }
-        }
-      }
-    }
-
-    // Get the topics values
-    totalTopicsCompleted = record.get("Total Topics Completed");
-    satMathTopicsCompleted = record.get("Sat Math Topics Completed");
-    satReadingTopicsCompleted = record.get("Sat Reading Topics Completed");
-    satWritingTopicsCompleted = record.get("Sat Writing Topics Completed");
-    completedTopics = record.get("Completed Topic IDs");
-
-    gotDashboardDetails = true;
-  });
-
-  //? Gets all classes for the student
-  base("Classes")
-    .select({
-      // Selecting the first 500 records in Grid view:
-      maxRecords: 500,
-      view: "All Classes",
-      fields: [
-        "Class Name",
-        "CourseID",
-        "Teacher Name",
-        "Class Time",
-        "Topics",
-        "Students",
-        "Students Attended",
-        "Class Completed",
-        "ClassID",
-        "Zoom Link",
-        "Zoom Recording",
-        "Location",
-      ],
-      filterByFormula: `({CourseID} = '${courseID}')`,
-    })
-    .eachPage(
-      function page(allClasses, fetchNextPage) {
-        // This function (`page`) will get called for each page of allClasses.
-
-        allClasses.forEach(function (singleClass) {
-          let students = singleClass.get("Students");
-          let studentsAttended = singleClass.get("Students Attended");
-          let classStatus = null;
-
-          // Checking if the student is included for the class
-          if (students && students.includes(studentID)) {
-            // Marking class status for the student based on attendance marked
-            if (singleClass.get("Class Completed")) {
-              // Checking if any students attendance has been marked
-              if (studentsAttended) {
-                if (studentsAttended.includes(studentID)) {
-                  classStatus = "Completed";
-                } else {
-                  classStatus = "Missed";
-                }
-              } else {
-                // Setting status as missed if no students attended
-                classStatus = "Missed";
-              }
-            } else {
-              classStatus = "Upcoming";
-            }
-
-            const momentdate = moment(singleClass.get("Class Time")).add(330, "minutes").format("Do MMMM, h:mm a");
-
-            const formattedSingleClass = {
-              className: singleClass.get("Class Name"),
-              // className: singleClass.get("Name"),
-              teacherName: singleClass.get("Teacher Name"),
-              classTime: singleClass.get("Class Time"),
-              formattedTime: momentdate,
-              classTopics: singleClass.get("Topics"),
-              classID: singleClass.get("ClassID"),
-              zoomLink: singleClass.get("Zoom Link"),
-              zoomRecording: singleClass.get("Zoom Recording"),
-              classStatus,
-              location: singleClass.get("Location"),
-            };
-
-            formattedClasses.push(formattedSingleClass);
-          }
-        });
-        /*
-         To fetch the next page of classes, call `fetchNextPage`.
-         If there are more classes, `page` will get called again.
-         If there are no more classes, `done` will get called.
-  */
-
-        fetchNextPage();
-      },
-      function done(err) {
-        // Getting all the upcoming classes
-        upcomingClasses = formattedClasses.filter((eachClass) => {
-          return eachClass.classStatus == "Upcoming";
-        });
-
-        // Sorting Upcoming classes in ascending order
-        upcomingClasses.sort((d1, d2) => new Date(d1.formattedTime).getTime() - new Date(d2.formattedTime).getTime());
-
-        completedClasses = formattedClasses.filter((eachClass) => {
-          return eachClass.classStatus == "Completed";
-        });
-
-        // Sorting Completed classes in decending order
-        completedClasses.sort((d1, d2) => new Date(d1.formattedTime).getTime() - new Date(d2.formattedTime).getTime())
-          .reverse;
-
-        // Getting all the missed classes
-        missedClasses = formattedClasses.filter((eachClass) => {
-          return eachClass.classStatus == "Missed";
-        });
-
-        // Sorting Missed classes in decending order
-        missedClasses.sort((d1, d2) => new Date(d1.formattedTime).getTime() - new Date(d2.formattedTime).getTime())
-          .reverse;
-
-        // Getting all the unknown classes
-        unknownClasses = formattedClasses.filter((eachClass) => {
-          return eachClass.classStatus == "Unknown";
-        });
-
-        // Sorting Unknown classes in decending order
-        unknownClasses.sort((d1, d2) => new Date(d1.formattedTime).getTime() - new Date(d2.formattedTime).getTime())
-          .reverse;
-
-        gotClassesDetails = true;
-
-        if (err) {
-          console.error(err);
-          return;
-        }
-      }
-    );
-
-  //? Gets all homework for a student
-  base("Homework")
-    .select({
-      // Selecting the first 3000 records in Grid view:
-      maxRecords: 6000,
-      view: "Grid view",
-      fields: ["Topic Name", "Due Date", "Completed", "Homework Files", "TopicID", "HomeworkID"],
-      filterByFormula: `({StudentID} = '${studentID}')`,
-    })
-    .eachPage(
-      function page(records, fetchNextPage) {
-        // This function (`page`) will get called for each page of records.
-
-        records.forEach(function (record) {
-          var attachment = record.get(["Homework Files"]);
-          if (!attachment) {
-            attachment = null;
-          }
-
-          let homeworkCompleted = false;
-          if (record.get("Completed")) {
-            homeworkCompleted = true;
-          }
-
-          let homeworkItem = {
-            name: record.get("Topic Name") ? record.get("Topic Name")[0] : "",
-            topicId: record.get("TopicID") ? record.get("TopicID")[0] : "",
-            homeworkId: record.get("HomeworkID"),
-            date: record.get("Due Date"),
-            completed: homeworkCompleted,
-            attachment: attachment ? attachment[0].url : attachment,
-            momentDate: moment(record.get("Due Date")).format("Do MMM"),
-          };
-          homeworkArray.push(homeworkItem);
-        });
-
-        // To fetch the next page of records, call `fetchNextPage`.
-        // If there are more records, `page` will get called again.
-        // If there are no more records, `done` will get called.
-        fetchNextPage();
-      },
-      function done(err) {
-        gotHomeworkDetails = true;
-
-        if (err) {
-          console.error(err);
-          return;
-        }
-      }
-    );
-
-  //? Gets all the tests for a student
-  base("Student Tests")
-    .select({
-      // Selecting the first 6000 records in Grid view:
-      maxRecords: 10000,
-      view: "Grid view",
-      fields: [
-        "Test Name",
-        "Test Due Date",
-        "Test Report",
-        "Status",
-        "Question Paper",
-        "TestID",
-        "Answer Explanation",
-        "Video Explanations",
-      ],
-      filterByFormula: `({StudentID} = '${studentID}')`,
-    })
-    .eachPage(
-      function page(records, fetchNextPage) {
-        // This function (`page`) will get called for each page of records.
-
-        records.forEach(function (record) {
-          let testItem = {
-            name: record.get("Test Name") ? record.get("Test Name")[0] : "",
-            dueDate: record.get("Test Due Date") ? record.get("Test Due Date") : null,
-            momentDate: record.get("Test Due Date") ? moment(record.get("Test Due Date")).format("Do MMM YYYY") : null,
-            report: record.get("Test Report") ? record.get("Test Report")[0].url : null,
-            status: record.get("Status") ? record.get("Status") : false,
-            questionPaper: record.get("Question Paper") ? record.get("Question Paper")[0].url : "",
-            writtenExplanation: record.get("Answer Explanation") ? record.get("Answer Explanation")[0].url : "",
-            videoExplanation: record.get("Video Explanations") ? record.get("Video Explanations")[0] : "",
-            testId: record.get("TestID"),
-          };
-          testsArray.push(testItem);
-        });
-
-        // To fetch the next page of records, call `fetchNextPage`.
-        // If there are more records, `page` will get called again.
-        // If there are no more records, `done` will get called.
-        fetchNextPage();
-      },
-      function done(err) {
-        // Sorting the allClasses in decending order
-        testsArray = _.sortBy(testsArray, function (singleTest) {
-          return singleTest.name;
-        });
-
-        gotTestDetails = true;
-
-        if (err) {
-          console.error(err);
-          return;
-        }
-      }
-    );
-
-  // Return response after all APIs have returned
-  const allCLear = setInterval(() => {
-    if (gotDashboardDetails && gotClassesDetails && gotHomeworkDetails && gotTestDetails) {
-      res.status(200).json({
-        success: true,
-        msg: `This gets dashboard statistics for the student`,
-        stats: {
-          upcomingClassesCount,
-          completedClassesCount,
-          missedClassesCount: missedClasses.length,
-          allClasses,
-          homeworkPending,
-          homeworkDue,
-          homeworkCompleted,
-          testsUpcoming,
-          testsMissed,
-          testsCompleted,
-          totalTopicsCompleted,
-          satMathTopicsCompleted,
-          satReadingTopicsCompleted,
-          satWritingTopicsCompleted,
-          actReadingTopicsCompleted,
-          actScienceTopicsCompleted,
-          actEnglishTopicsCompleted,
-        },
-
-        classes: {
-          upcomingClasses,
-          completedClasses,
-          missedClasses,
-          unknownClasses,
-        },
-
-        completedTopics,
-
-        homeworkArray,
-
-        testsArray,
-      });
-      clearInterval(allCLear);
-    }
-  }, 200);
-});
+//     res.status(200).json({
+//       success: true,
+//       msg: `This gets dashboard statistics for the student`,
+//       stats: {
+//         upcomingClasses,
+//         allClasses,
+//         totalTopicsCompleted: record.get("Total Topics Completed"),
+//         mathTopicsCompleted: record.get("Sat Math Topics Completed"),
+//         readingTopicsCompleted: record.get("Sat Reading Topics Completed"),
+//         writingTopicsCompleted: record.get("Sat Writing Topics Completed"),
+//         homeworkPending,
+//         homeworkDue,
+//         homeworkCompleted,
+//         testsUpcoming,
+//         testsMissed,
+//         testsCompleted,
+//       },
+//     });
+//   });
+// });
 
 const PORT = process.env.PORT || 5000;
 
