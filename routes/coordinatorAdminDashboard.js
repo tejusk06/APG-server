@@ -35,33 +35,42 @@ router.get("/:airtableIdOrRole", (req, res) => {
         function page(records, fetchNextPage) {
           // This function (`page`) will get called for each page of records.
 
-          const incrementClassCount = (record) => {
-            let classTime = new Date(record.get("Class Time"));
-            classTime.setHours(0);
-            classTime.setMinutes(0);
-            classTime.setSeconds(0);
-            let momentClassTime = moment(classTime);
-            let daysFromToday = momentClassTime.diff(momentToday, "days");
+          try {
+            const incrementClassCount = (record) => {
+              let classTime = new Date(record.get("Class Time"));
+              classTime.setHours(0);
+              classTime.setMinutes(0);
+              classTime.setSeconds(0);
+              let momentClassTime = moment(classTime);
+              let daysFromToday = momentClassTime.diff(momentToday, "days");
 
-            if (record.get("Class Completed")) {
-              completedClasses++;
-            } else if (daysFromToday >= 0) {
-              upcomingClasses++;
-            } else if (daysFromToday < 0) {
-              missedClasses++;
-            }
-          };
-
-          records.forEach(function (record) {
-            if (req.params.airtableIdOrRole == "admin") {
-              incrementClassCount(record);
-            } else if (record.get("Coordinator")) {
-              // if coordinator is requesting return only students assigned to him/her
-              if (record.get("Coordinator").includes(req.params.airtableIdOrRole)) {
-                incrementClassCount(record);
+              if (record.get("Class Completed")) {
+                completedClasses++;
+              } else if (daysFromToday >= 0) {
+                upcomingClasses++;
+              } else if (daysFromToday < 0) {
+                missedClasses++;
               }
-            }
-          });
+            };
+
+            records.forEach(function (record) {
+              if (req.params.airtableIdOrRole == "admin") {
+                incrementClassCount(record);
+              } else if (record.get("Coordinator")) {
+                // if coordinator is requesting return only students assigned to him/her
+                if (record.get("Coordinator").includes(req.params.airtableIdOrRole)) {
+                  incrementClassCount(record);
+                }
+              }
+            });
+          } catch (error) {
+            console.log("error is", error);
+
+            res.status(500).json({
+              success: false,
+              error: `${error}`,
+            });
+          }
 
           fetchNextPage();
         },

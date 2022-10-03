@@ -111,6 +111,16 @@ router.get("/:studentCourse", (req, res) => {
       },
       function done(err) {
         // Getting all the upcoming classes
+        if (err) {
+          console.log("error is", err);
+
+          res.status(500).json({
+            success: false,
+            error: `${err}`,
+          });
+
+          return;
+        }
         const upcomingClasses = formattedClasses.filter((eachClass) => {
           return eachClass.classStatus == "Upcoming";
         });
@@ -152,11 +162,6 @@ router.get("/:studentCourse", (req, res) => {
           missedClasses,
           unknownClasses,
         });
-        if (err) {
-          console.error(err);
-
-          return;
-        }
       }
     );
 });

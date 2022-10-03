@@ -41,36 +41,41 @@ router.get("/:studentID", (req, res) => {
       function page(records, fetchNextPage) {
         // This function (`page`) will get called for each page of records.
 
-        records.forEach(function (record) {
-          var attachment = record.get(["Homework Files"]);
-          if (!attachment) {
-            attachment = null;
-          }
+        try {
+          records.forEach(function (record) {
+            var attachment = record.get(["Homework Files"]);
+            if (!attachment) {
+              attachment = null;
+            }
 
-          let homeworkCompleted = false;
-          if (record.get("Completed")) {
-            homeworkCompleted = true;
-          }
+            let homeworkCompleted = false;
+            if (record.get("Completed")) {
+              homeworkCompleted = true;
+            }
 
-          let homeworkItem = {
-            name: record.get("Topic Name") ? record.get("Topic Name")[0] : "",
-            topicId: record.get("TopicID") ? record.get("TopicID")[0] : "",
-            homeworkId: record.get("HomeworkID"),
-            date: record.get("Due Date"),
-            assignedDate: moment(record.get("Homework Assigned")).format("Do MMM"),
-            completedDate: moment(record.get("Homework Completed")).format("Do MMM"),
-            completed: homeworkCompleted,
-            attachment: attachment ? attachment[0].url : attachment,
-            momentDate: moment(record.get("Due Date")).format("Do MMM"),
-            courseSection: record.get("Course Section")[0],
-            courseSectionHomeworkName: record.get("Course Section Homework Name"),
-          };
-          homeworkArray.push(homeworkItem);
-        });
+            let homeworkItem = {
+              name: record.get("Topic Name") ? record.get("Topic Name")[0] : "",
+              topicId: record.get("TopicID") ? record.get("TopicID")[0] : "",
+              homeworkId: record.get("HomeworkID"),
+              date: record.get("Due Date"),
+              assignedDate: moment(record.get("Homework Assigned")).format("Do MMM"),
+              completedDate: moment(record.get("Homework Completed")).format("Do MMM"),
+              completed: homeworkCompleted,
+              attachment: attachment ? attachment[0].url : attachment,
+              momentDate: moment(record.get("Due Date")).format("Do MMM"),
+              courseSection: record.get("Course Section")[0],
+              courseSectionHomeworkName: record.get("Course Section Homework Name"),
+            };
+            homeworkArray.push(homeworkItem);
+          });
+        } catch (error) {
+          console.log("error is", error);
 
-        // To fetch the next page of records, call `fetchNextPage`.
-        // If there are more records, `page` will get called again.
-        // If there are no more records, `done` will get called.
+          res.status(500).json({
+            success: false,
+            error: `${error}`,
+          });
+        }
         fetchNextPage();
       },
       function done(err) {

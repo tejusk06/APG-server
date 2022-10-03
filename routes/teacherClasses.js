@@ -44,54 +44,68 @@ router.get("/:teacherID", (req, res) => {
       function page(allClasses, fetchNextPage) {
         // This function (`page`) will get called for each page of allClasses.
 
-        allClasses.forEach(function (singleClass) {
-          let classStatus = null;
+        try {
+          allClasses.forEach(function (singleClass) {
+            let classStatus = null;
 
-          let classTime = new Date(singleClass.get("Class Time")).toDateString();
-          let momentClassTime = moment(classTime);
-          let daysFromToday = momentClassTime.diff(momentToday, "days");
+            let classTime = new Date(singleClass.get("Class Time")).toDateString();
+            let momentClassTime = moment(classTime);
+            let daysFromToday = momentClassTime.diff(momentToday, "days");
 
-          // Checking if the student is included for the class
+            // Checking if the student is included for the class
 
-          const momentdate = moment(singleClass.get("Class Time")).format("Do MMMM YY, h:mm a");
+            const momentdate = moment(singleClass.get("Class Time")).format("Do MMMM YY, h:mm a");
 
-          // Marking class status for the student based on attendance marked
-          if (singleClass.get("Class Completed")) {
-            // Checking if any students attendance has been marked
-            classStatus = "Completed";
-          } else if (daysFromToday >= 0) {
-            classStatus = "Upcoming";
-          } else if (daysFromToday < 0) {
-            classStatus = "Overdue";
-          }
+            // Marking class status for the student based on attendance marked
+            if (singleClass.get("Class Completed")) {
+              // Checking if any students attendance has been marked
+              classStatus = "Completed";
+            } else if (daysFromToday >= 0) {
+              classStatus = "Upcoming";
+            } else if (daysFromToday < 0) {
+              classStatus = "Overdue";
+            }
 
-          const formattedSingleClass = {
-            className: singleClass.get("Class Name"),
-            teacherName: singleClass.get("Teacher Name"),
-            classTime: singleClass.get("Class Time"),
-            formattedTime: momentdate,
-            classTopics: singleClass.get("Topics"),
-            classID: singleClass.get("ClassID"),
-            zoomLink: singleClass.get("Zoom Link"),
-            zoomRecording: singleClass.get("Zoom Recording"),
-            classStatus,
-            location: singleClass.get("Location"),
-            students: singleClass.get("Student Names"),
-            notes: singleClass.get("Notes"),
-            daysFromToday: daysFromToday,
-          };
+            const formattedSingleClass = {
+              className: singleClass.get("Class Name"),
+              teacherName: singleClass.get("Teacher Name"),
+              classTime: singleClass.get("Class Time"),
+              formattedTime: momentdate,
+              classTopics: singleClass.get("Topics"),
+              classID: singleClass.get("ClassID"),
+              zoomLink: singleClass.get("Zoom Link"),
+              zoomRecording: singleClass.get("Zoom Recording"),
+              classStatus,
+              location: singleClass.get("Location"),
+              students: singleClass.get("Student Names"),
+              notes: singleClass.get("Notes"),
+              daysFromToday: daysFromToday,
+            };
 
-          formattedClasses.push(formattedSingleClass);
-        });
-        /*
-           To fetch the next page of classes, call `fetchNextPage`.
-           If there are more classes, `page` will get called again.
-           If there are no more classes, `done` will get called.
-    */
+            formattedClasses.push(formattedSingleClass);
+          });
+        } catch (error) {
+          console.log("error is", error);
+
+          res.status(500).json({
+            success: false,
+            error: `${error}`,
+          });
+        }
 
         fetchNextPage();
       },
       function done(err) {
+        if (err) {
+          console.log("error is", err);
+
+          res.status(500).json({
+            success: false,
+            error: `${err}`,
+          });
+          return;
+        }
+
         // Getting all the upcoming classes
         const upcomingClasses = formattedClasses.filter((eachClass) => {
           return eachClass.classStatus == "Upcoming";
@@ -142,10 +156,6 @@ router.get("/:teacherID", (req, res) => {
           overdueClasses: overdueSorted,
           unknownClasses,
         });
-        if (err) {
-          console.error(err);
-          return;
-        }
       }
     );
 });

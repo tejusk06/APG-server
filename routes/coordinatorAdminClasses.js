@@ -122,49 +122,58 @@ router.get("/:airtableIdOrRole", (req, res) => {
         fetchNextPage();
       },
       function done(err) {
-        // Getting all the upcoming classes
-        const upcomingClasses = formattedClasses.filter((eachClass) => {
-          return eachClass.classStatus == "Upcoming";
-        });
+        try {
+          // Getting all the upcoming classes
+          const upcomingClasses = formattedClasses.filter((eachClass) => {
+            return eachClass.classStatus == "Upcoming";
+          });
 
-        const upcomingSorted = upcomingClasses.sort(function compare(a, b) {
-          var dateA = new Date(a.classTime);
-          var dateB = new Date(b.classTime);
-          return dateA - dateB;
-        });
+          const upcomingSorted = upcomingClasses.sort(function compare(a, b) {
+            var dateA = new Date(a.classTime);
+            var dateB = new Date(b.classTime);
+            return dateA - dateB;
+          });
 
-        // Getting all the Missed classes
-        const overdueClasses = formattedClasses.filter((eachClass) => {
-          return eachClass.classStatus == "Overdue";
-        });
+          // Getting all the Missed classes
+          const overdueClasses = formattedClasses.filter((eachClass) => {
+            return eachClass.classStatus == "Overdue";
+          });
 
-        const overdueSorted = overdueClasses.sort(function compare(a, b) {
-          var dateA = new Date(a.classTime);
-          var dateB = new Date(b.classTime);
-          return dateA - dateB;
-        });
+          const overdueSorted = overdueClasses.sort(function compare(a, b) {
+            var dateA = new Date(a.classTime);
+            var dateB = new Date(b.classTime);
+            return dateA - dateB;
+          });
 
-        const completedClasses = formattedClasses.filter((eachClass) => {
-          return eachClass.classStatus == "Completed";
-        });
+          const completedClasses = formattedClasses.filter((eachClass) => {
+            return eachClass.classStatus == "Completed";
+          });
 
-        const completedSorted = completedClasses.sort(function compare(a, b) {
-          var dateA = new Date(a.classTime);
-          var dateB = new Date(b.classTime);
-          return dateB - dateA;
-        });
+          const completedSorted = completedClasses.sort(function compare(a, b) {
+            var dateA = new Date(a.classTime);
+            var dateB = new Date(b.classTime);
+            return dateB - dateA;
+          });
 
-        res.status(200).json({
-          success: true,
-          msg: `This gets all the classes for the admin`,
-          // formattedClasses,
-          upcomingClasses: upcomingSorted,
-          completedClasses: completedSorted,
-          overdueClasses: overdueSorted,
-        });
-        if (err) {
-          console.error(err);
-          return;
+          res.status(200).json({
+            success: true,
+            msg: `This gets all the classes for the admin`,
+            // formattedClasses,
+            upcomingClasses: upcomingSorted,
+            completedClasses: completedSorted,
+            overdueClasses: overdueSorted,
+          });
+          if (err) {
+            console.error(err);
+            return;
+          }
+        } catch (error) {
+          console.log("error is", error);
+
+          res.status(500).json({
+            success: false,
+            error: `${error}`,
+          });
         }
       }
     );

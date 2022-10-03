@@ -39,24 +39,32 @@ router.get("/:studentID", (req, res) => {
       function page(records, fetchNextPage) {
         // This function (`page`) will get called for each page of records.
 
-        records.forEach(function (record) {
-          let testItem = {
-            name: record.get("Test Name") ? record.get("Test Name")[0] : "",
-            dueDate: record.get("Test Due Date") ? record.get("Test Due Date") : null,
-            momentDate: record.get("Test Due Date") ? moment(record.get("Test Due Date")).format("Do MMM YYYY") : null,
-            report: record.get("Test Report") ? record.get("Test Report")[0].url : null,
-            status: record.get("Status") ? record.get("Status") : false,
-            questionPaper: record.get("Question Paper") ? record.get("Question Paper")[0].url : "",
-            writtenExplanation: record.get("Answer Explanation") ? record.get("Answer Explanation")[0].url : "",
-            videoExplanation: record.get("Video Explanations") ? record.get("Video Explanations")[0] : "",
-            testId: record.get("TestID"),
-          };
-          testsArray.push(testItem);
-        });
+        try {
+          records.forEach(function (record) {
+            let testItem = {
+              name: record.get("Test Name") ? record.get("Test Name")[0] : "",
+              dueDate: record.get("Test Due Date") ? record.get("Test Due Date") : null,
+              momentDate: record.get("Test Due Date")
+                ? moment(record.get("Test Due Date")).format("Do MMM YYYY")
+                : null,
+              report: record.get("Test Report") ? record.get("Test Report")[0].url : null,
+              status: record.get("Status") ? record.get("Status") : false,
+              questionPaper: record.get("Question Paper") ? record.get("Question Paper")[0].url : "",
+              writtenExplanation: record.get("Answer Explanation") ? record.get("Answer Explanation")[0].url : "",
+              videoExplanation: record.get("Video Explanations") ? record.get("Video Explanations")[0] : "",
+              testId: record.get("TestID"),
+            };
+            testsArray.push(testItem);
+          });
+        } catch (error) {
+          console.log("error is", error);
 
-        // To fetch the next page of records, call `fetchNextPage`.
-        // If there are more records, `page` will get called again.
-        // If there are no more records, `done` will get called.
+          res.status(500).json({
+            success: false,
+            error: `${error}`,
+          });
+        }
+
         fetchNextPage();
       },
       function done(err) {
