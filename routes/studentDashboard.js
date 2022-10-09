@@ -138,6 +138,11 @@ router.get("/:studentCourse", (req, res) => {
       satMathTopicsCompleted = record.get("Sat Math Topics Completed");
       satReadingTopicsCompleted = record.get("Sat Reading Topics Completed");
       satWritingTopicsCompleted = record.get("Sat Writing Topics Completed");
+
+      actReadingTopicsCompleted = record.get("Act Reading Topics Completed");
+      actScienceTopicsCompleted = record.get("Act Science Topics Completed");
+      actEnglishTopicsCompleted = record.get("Act English Topics Completed");
+
       completedTopics = record.get("Completed Topic IDs");
 
       gotDashboardDetails = true;
