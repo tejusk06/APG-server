@@ -35,7 +35,7 @@ app.use("/api/v1/class", individualClass);
 app.use("/api/v1/coordinatorAdmin/students", coordinatorAdminStudents);
 app.use("/api/v1/admin/student", individualStudent);
 app.use("/api/v1/coordinatorAdmin/dashboard", coordinatorAdminDashboard);
-app.use("/api/v1/student/dashboard-v2", studentDashboard);
+app.use("/api/v1/student/dashboard", studentDashboard);
 
 // Creating the base for Airtable API Calls
 const base = require("airtable").base("appvnq3LlzxDIHTqI");
